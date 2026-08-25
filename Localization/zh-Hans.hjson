@@ -1,6 +1,90 @@
 Mods: {
 	Looteria: {
 		Configs: {
+			EnemyAffixConfig: {
+				DisplayName: 敌人词缀配置
+
+				Enable: {
+					Label: 启用敌人词缀
+					Tooltip: 敌人词缀系统总开关。关闭后敌人不再附加任何词缀。
+				}
+
+				CommonAffixChance: {
+					Label: 普通怪词缀概率
+					Tooltip: 普通非 Boss 怪带 1 条普通词缀的概率（0~50%，默认 20%）。
+				}
+
+				EliteChance: {
+					Label: 精英率
+					Tooltip: 非 Boss 敌人成为精英怪的概率（0~50%，默认 8%）。精英怪带 2~3 条词缀、效果更强、掉落更高。
+				}
+
+				EliteAffixCountMin: {
+					Label: 精英词缀条数下限
+					Tooltip: 精英怪至少带几条词缀（默认 2）。
+				}
+
+				EliteAffixCountMax: {
+					Label: 精英词缀条数上限
+					Tooltip: 精英怪最多带几条词缀（默认 3）。
+				}
+
+				BossAffixCountMin: {
+					Label: Boss 普通词缀下限
+					Tooltip: Boss 至少带几条普通词缀（默认 3）。
+				}
+
+				BossAffixCountMax: {
+					Label: Boss 普通词缀上限
+					Tooltip: Boss 最多带几条普通词缀（默认 4）。
+				}
+
+				BossExclusiveCountMin: {
+					Label: Boss 专属词缀下限
+					Tooltip: Boss 至少带几条专属强化词缀（默认 1）。
+				}
+
+				BossExclusiveCountMax: {
+					Label: Boss 专属词缀上限
+					Tooltip: Boss 最多带几条专属强化词缀（默认 2）。
+				}
+
+				AffixPowerMult: {
+					Label: 词缀数值倍率
+					Tooltip: 所有词缀数值的全局倍率（0.25x - 3x，默认 1x）。
+				}
+
+				LifeMultCap: {
+					Label: 生命乘数上限
+					Tooltip: 词缀引起的生命乘数上限（默认 4x），防止词缀+模式+层缩放叠加爆炸。
+				}
+
+				DamageMultCap: {
+					Label: 伤害乘数上限
+					Tooltip: 词缀引起的伤害乘数上限（默认 4x），防止词缀+模式+层缩放叠加爆炸。
+				}
+
+				StageScaling: {
+					Label: 词缀随阶段上浮
+					Tooltip: 词缀数值是否随游戏阶段（0~7）上浮（×(1+0.15×阶段)）。
+				}
+
+				ShowAffixInName: {
+					Label: 名字显示词缀前缀
+					Tooltip: 在敌人名字前加词缀前缀（如「狂暴的骷髅」）。关闭则只染色。
+				}
+
+				EliteDropBonusPerAffix: {
+					Label: 精英掉落加成（每词缀）
+					Tooltip: 精英怪货币掉落 × (1 + 词缀数 × 该值)（默认 0.15，即 3 词缀精英 +45%）。
+				}
+
+				ExcludedNpcs: {
+					Label: 排除的敌人（显示名）
+					Tooltip: 列表中的敌人（按显示名）不附加任何词缀。输入英文/中文显示名均可。
+				}
+			}
+
 			LooteriaConfig: {
 				DisplayName: 掠夺之地配置
 
@@ -399,6 +483,42 @@ Mods: {
 				Flat: +{0} 破甲（固定）
 				Pct: +{0} 破甲（百分比）
 			}
+		}
+
+		EnemyAffix: {
+			Prefix: {0}的{1}
+			RarityCommon: 变异
+			RarityChampion: 精英
+			RarityBoss: Boss词缀
+
+			Strong: 强壮
+			Berserk: 狂暴
+			Ironhide: 铁壁
+			Swift: 迅捷
+			Regen: 再生
+			Burning: 燃烧
+			Poisonous: 剧毒
+			Frost: 冰冻
+			Cursed: 诅咒
+			Bleeding: 流血
+			Thorns: 荆棘
+			Vampiric: 吸血
+			Split: 分裂
+			Summoner: 召唤
+			Explosive: 爆炸
+
+			Apocalypse: 天启
+			Immortal: 不朽
+			Annihilation: 湮灭
+			ElementLord: 元素领主
+			Warlord: 统帅
+			SplitRampage: 分裂狂潮
+			ThornsCrown: 荆棘王冠
+			VampireLord: 吸血伯爵
+			StormEye: 风暴之眼
+			Fury: 狂怒
+			SwiftHunter: 迅捷猎手
+			Unbreakable: 坚不可摧
 		}
 
 		Theme: {

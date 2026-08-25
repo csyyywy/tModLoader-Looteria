@@ -1,6 +1,90 @@
 Mods: {
 	Looteria: {
 		Configs: {
+			EnemyAffixConfig: {
+				DisplayName: Enemy Affix Config
+
+				Enable: {
+					Label: Enable Enemy Affixes
+					Tooltip: Master switch for the enemy affix system. When off, enemies get no affixes.
+				}
+
+				CommonAffixChance: {
+					Label: Common Affix Chance
+					Tooltip: Chance for a normal non-boss enemy to carry 1 common affix (0-50%, default 20%).
+				}
+
+				EliteChance: {
+					Label: Elite Chance
+					Tooltip: Chance for a non-boss enemy to become an elite (0-50%, default 8%). Elites carry 2-3 affixes, stronger effects, better drops.
+				}
+
+				EliteAffixCountMin: {
+					Label: Elite Affix Count Min
+					Tooltip: Minimum affixes an elite carries (default 2).
+				}
+
+				EliteAffixCountMax: {
+					Label: Elite Affix Count Max
+					Tooltip: Maximum affixes an elite carries (default 3).
+				}
+
+				BossAffixCountMin: {
+					Label: Boss Affix Count Min
+					Tooltip: Minimum common affixes a boss carries (default 3).
+				}
+
+				BossAffixCountMax: {
+					Label: Boss Affix Count Max
+					Tooltip: Maximum common affixes a boss carries (default 4).
+				}
+
+				BossExclusiveCountMin: {
+					Label: Boss Exclusive Affix Count Min
+					Tooltip: Minimum exclusive affixes a boss carries (default 1).
+				}
+
+				BossExclusiveCountMax: {
+					Label: Boss Exclusive Affix Count Max
+					Tooltip: Maximum exclusive affixes a boss carries (default 2).
+				}
+
+				AffixPowerMult: {
+					Label: Affix Power Mult
+					Tooltip: Global multiplier for all affix values (0.25x - 3x, default 1x).
+				}
+
+				LifeMultCap: {
+					Label: Life Mult Cap
+					Tooltip: Cap on the life multiplier from affixes (default 4x), prevents blow-up when stacked with mode + rift scaling.
+				}
+
+				DamageMultCap: {
+					Label: Damage Mult Cap
+					Tooltip: Cap on the damage multiplier from affixes (default 4x), prevents blow-up when stacked with mode + rift scaling.
+				}
+
+				StageScaling: {
+					Label: Stage Scaling
+					Tooltip: Whether affix values scale with game stage (0-7) as ×(1+0.15×stage).
+				}
+
+				ShowAffixInName: {
+					Label: Show Affix Prefix In Name
+					Tooltip: Prepend the affix name to the enemy name (e.g. "Berserk Zombie"). Off = color tint only.
+				}
+
+				EliteDropBonusPerAffix: {
+					Label: Elite Drop Bonus Per Affix
+					Tooltip: Elite currency drops × (1 + affix count × this value) (default 0.15, so a 3-affix elite drops +45%).
+				}
+
+				ExcludedNpcs: {
+					Label: Excluded Enemies (Display Name)
+					Tooltip: Enemies in this list (by display name) never get affixes. English or Chinese names both work.
+				}
+			}
+
 			LooteriaConfig: {
 				DisplayName: Looteria Config
 
@@ -399,6 +483,42 @@ Mods: {
 				Flat: +{0} armor shred (flat)
 				Pct: +{0} armor shred (pct)
 			}
+		}
+
+		EnemyAffix: {
+			Prefix: {0} {1}
+			RarityCommon: Mutated
+			RarityChampion: Elite
+			RarityBoss: Boss
+
+			Strong: Strong
+			Berserk: Berserk
+			Ironhide: Ironhide
+			Swift: Swift
+			Regen: Regenerating
+			Burning: Burning
+			Poisonous: Poisonous
+			Frost: Frost
+			Cursed: Cursed
+			Bleeding: Bleeding
+			Thorns: Thorny
+			Vampiric: Vampiric
+			Split: Splitting
+			Summoner: Summoner
+			Explosive: Explosive
+
+			Apocalypse: Apocalypse
+			Immortal: Immortal
+			Annihilation: Annihilation
+			ElementLord: Element Lord
+			Warlord: Warlord
+			SplitRampage: Split Rampage
+			ThornsCrown: Thorns Crown
+			VampireLord: Vampire Lord
+			StormEye: Storm Eye
+			Fury: Fury
+			SwiftHunter: Swift Hunter
+			Unbreakable: Unbreakable
 		}
 
 		Theme: {

@@ -245,6 +245,17 @@ public class RiftSystem : ModSystem
         return pool.Count == 0 ? null : pool[Main.rand.Next(pool.Count)];
     }
 
+    /// <summary>供敌人词缀系统（风暴之眼）选服务端锚点：参战者优先，退化为任意在线玩家（无则 null）。</summary>
+    public static Player? PickAnchorForProjectile()
+        => RiftActive ? PickAnchor() : AnyOnlinePlayer();
+
+    private static Player? AnyOnlinePlayer()
+    {
+        for (int i = 0; i < Main.maxPlayers; i++)
+            if (Main.player[i] is { active: true } pl) return pl;
+        return null;
+    }
+
     /// <summary>进度推送节流：至少间隔 60 tick 且（|Δprogress|≥5 或 剩余时间变化 ≥60 tick）；通关/失败前 force=true 强制。</summary>
     private static void PushProgressIfDirty(bool force)
     {
@@ -421,18 +432,22 @@ public class RiftSystem : ModSystem
             var npc = Main.npc[id];
             if (npc == null) return false;
             // 实测校验（防 mod 生成时把属性暴缩成超大，如 400 万血最终 Boss）：
-            // 用「生成后实际值 / 缓存 SetDefaults 值」的比值判断。缓存原样存 SetDefaults（与生成空间接近），
-            // 合法怪的比值天然很小（~1~6）；只有 mod 在生成时把属性改到完全离谱（400 万血 → 比值上万）才超线。
-            // 阈值 100 只抓这种极端，绝不误杀合法世界缩放。
+            // 用「生成后实际值 / 预期值」的比值判断。预期值 = 缓存 SetDefaults 值 × 层缩放 × 词缀倍率
+            //（EnemyAffixGlobalNPC 在 OnSpawn 记录 LifeMult/DamageMult）。
+            // 合法叠加（词缀 + 层缩放 + 大师/FTW 模式缩放）比值天然 ~1~6；
+            // 阈值 100 只抓 mod 在生成时把属性改到完全离谱（400 万血 → 比值上万）这种极端，绝不误杀。
             var cacheEntry = _npcCache!.FirstOrDefault(e => e.Type == type);
             if (cacheEntry.Type != 0)
             {
-                double lifeRatio = (double)npc.lifeMax / Math.Max(1, cacheEntry.LifeMax);
-                double dmgRatio = (double)npc.damage / Math.Max(1, cacheEntry.Damage);
+                npc.TryGetGlobalNPC(out EnemyAffixGlobalNPC eag);
+                double lifeExpected = cacheEntry.LifeMax * (1f + 0.15f * CurrentLevel) * Math.Max(1f, eag?.LifeMult ?? 1f);
+                double dmgExpected = cacheEntry.Damage * (1f + 0.10f * CurrentLevel) * Math.Max(1f, eag?.DamageMult ?? 1f);
+                double lifeRatio = npc.lifeMax / Math.Max(1.0, lifeExpected);
+                double dmgRatio = npc.damage / Math.Max(1.0, dmgExpected);
                 if (lifeRatio > 100.0 || dmgRatio > 100.0)
                 {
                     global::Looteria.Looteria.Instance?.Logger.Info(
-                        $"Rift despawned over-scaled npc: type={type}, life={npc.lifeMax}(base {cacheEntry.LifeMax}), dmg={npc.damage}(base {cacheEntry.Damage}), def={npc.defense}, lifeRatio={lifeRatio:0.#}, dmgRatio={dmgRatio:0.#}, level={CurrentLevel}");
+                        $"Rift despawned over-scaled npc: type={type}, life={npc.lifeMax}(expected {lifeExpected:0}), dmg={npc.damage}(expected {dmgExpected:0}), def={npc.defense}, lifeRatio={lifeRatio:0.#}, dmgRatio={dmgRatio:0.#}, level={CurrentLevel}");
                     npc.active = false;
                     return false;
                 }

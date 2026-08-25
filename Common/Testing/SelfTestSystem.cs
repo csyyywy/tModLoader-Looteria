@@ -6,6 +6,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.IO;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 using global::Looteria.Common.Configs;
 using global::Looteria.Common.Data;
 using global::Looteria.Common.Globals;
@@ -29,9 +30,8 @@ public class SelfTestSystem : ModSystem
 
     public static void RegisterTest(string name, Func<string> body) => Tests[name] = body;
 
-    public override bool IsLoadingEnabled(Mod mod)
-        => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("Looteria_TESTDIR"));
-
+    /// <summary>无条件启用：Load 里再按环境变量决定是否注册用例/启动桥。
+    /// （用 IsLoadingEnabled 返回 false 会导致整个类不加载，PostUpdateWorld 永远不跑。）</summary>
     public override void Load()
     {
         _root = Environment.GetEnvironmentVariable("Looteria_TESTDIR");
@@ -107,6 +107,82 @@ public class SelfTestSystem : ModSystem
                     counts[ag.SetThemeId] = counts.TryGetValue(ag.SetThemeId, out int c) ? c + 1 : 1;
             }
             return $"slots={Main.player[0].armor.Length} sets={counts.Count} (no crash)";
+        });
+
+        // 敌人词缀：刷出后掷取 → 属性应用 → 倍率记录 → SendExtraAI 往返一致 → RiftSystem 防线新分母
+        RegisterTest("enemy-affix", () =>
+        {
+            var cfg = EnemyAffixConfig.Instance;
+            if (cfg == null) throw new Exception("no enemy affix config");
+            bool oldEnable = cfg.Enable;
+            float oldCommon = cfg.CommonAffixChance;
+            float oldElite = cfg.EliteChance;
+            int oldBossMin = cfg.BossAffixCountMin, oldBossMax = cfg.BossAffixCountMax;
+            int oldBossExMin = cfg.BossExclusiveCountMin, oldBossExMax = cfg.BossExclusiveCountMax;
+            try
+            {
+                cfg.Enable = true;
+                cfg.CommonAffixChance = 0f;   // 只测精英/Boss 路径（确定性）
+                cfg.EliteChance = 1f;         // 必然精英
+                cfg.BossAffixCountMin = 1; cfg.BossAffixCountMax = 1;
+                cfg.BossExclusiveCountMin = 1; cfg.BossExclusiveCountMax = 1;
+
+                // 用非 Boss 小怪（蓝史莱姆）：必然精英 → 词缀非空
+                var npc = new NPC();
+                npc.SetDefaults(NPCID.BlueSlime);
+                if (!npc.TryGetGlobalNPC(out EnemyAffixGlobalNPC g))
+                    throw new Exception("no enemy affix global on npc");
+
+                // 手工触发掷取（OnSpawn 走 Main.netMode 服务端守卫；无头服务端 netMode 可能不是 Server，
+                // 直接用内部掷取方法验证核心逻辑）
+                g.RollForTest(npc);
+                if (!g.HasAffixes) throw new Exception("elite rolled no affixes");
+                if (g.LifeMult < 1f || g.DamageMult < 1f)
+                    throw new Exception($"bad mults life={g.LifeMult} dmg={g.DamageMult}");
+
+                // 属性已乘：lifeMax >= 基础值（记录在 BaseLifeMax）
+                if (g.BaseLifeMax <= 0) throw new Exception("base life not recorded");
+                if (npc.lifeMax < g.BaseLifeMax) throw new Exception("life not scaled");
+
+                // SendExtraAI / ReceiveExtraAI 往返（BitWriter.WriteBit/Flush + BitReader.ReadBit）
+                var ms = new MemoryStream();
+                using (var bw2 = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+                {
+                    var bitWriter = new BitWriter();
+                    g.SendExtraAI(npc, bitWriter, bw2);
+                    bitWriter.Flush(bw2);
+                    bw2.Flush();
+                }
+                ms.Position = 0;
+                var g2 = new EnemyAffixGlobalNPC();
+                using (var br2 = new BinaryReader(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+                {
+                    var bitReader = new BitReader(br2);
+                    g2.ReceiveExtraAI(npc, bitReader, br2);
+                }
+                if (g2.Affixes.Count != g.Affixes.Count)
+                    throw new Exception($"net roundtrip count {g.Affixes.Count} -> {g2.Affixes.Count}");
+                for (int i = 0; i < g.Affixes.Count; i++)
+                    if (g2.Affixes[i] != g.Affixes[i])
+                        throw new Exception($"net roundtrip mismatch at {i}: {g.Affixes[i]} -> {g2.Affixes[i]}");
+
+                // RiftSystem 防线新分母：预期值 = 缓存基础 × 层缩放 × 词缀倍率；比值 ≈ 1（合法）
+                int level = 5;
+                double expectedLife = g.BaseLifeMax * (1f + 0.15f * level) * g.LifeMult;
+                double lifeRatio = npc.lifeMax / Math.Max(1.0, expectedLife);
+                if (lifeRatio > 100.0)
+                    throw new Exception($"defense-line would false-kill: lifeRatio={lifeRatio:0.#}");
+
+                return $"elite affixes={g.Affixes.Count} lifeMult={g.LifeMult:0.##} dmgMult={g.DamageMult:0.##} net={g2.Affixes.Count} ratio={lifeRatio:0.##}";
+            }
+            finally
+            {
+                cfg.Enable = oldEnable;
+                cfg.CommonAffixChance = oldCommon;
+                cfg.EliteChance = oldElite;
+                cfg.BossAffixCountMin = oldBossMin; cfg.BossAffixCountMax = oldBossMax;
+                cfg.BossExclusiveCountMin = oldBossExMin; cfg.BossExclusiveCountMax = oldBossExMax;
+            }
         });
     }
 

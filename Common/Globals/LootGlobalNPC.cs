@@ -16,7 +16,8 @@ namespace Looteria.Common.Globals;
 /// </summary>
 public class LootGlobalNPC : GlobalNPC
 {
-    /// <summary>是否精英怪（InstancePerEntity 每 NPC 一个实例）。</summary>
+    /// <summary>是否精英怪（InstancePerEntity 每 NPC 一个实例）。
+    /// ⚠️ 已迁移到 EnemyAffixGlobalNPC（词缀系统判定）；此字段保留仅为旧引用兼容，不再被写入。</summary>
     public bool IsElite;
 
     /// <summary>是否秘境入侵刷出的敌人（只计秘境进度）。</summary>
@@ -37,19 +38,10 @@ public class LootGlobalNPC : GlobalNPC
             spawnRate = 0;
     }
 
-    /// <summary>生成时：精英标记 + 属性倍率；秘境激活时按层缩放敌人（Boss 也缩放）。</summary>
+    /// <summary>生成时：秘境激活时按层缩放敌人（Boss 也缩放）。
+    /// 精英/词缀逻辑已迁移到 EnemyAffixGlobalNPC（刷出后掷取，属性/倍率记录/名字染色）。</summary>
     public override void OnSpawn(NPC npc, IEntitySource source)
     {
-        float eliteChance = LooteriaConfig.Instance?.EliteChance ?? 0.08f;
-        if (!npc.boss && Main.rand.NextFloat() < eliteChance)
-        {
-            IsElite = true;
-            npc.lifeMax = (int)(npc.lifeMax * 1.8f);
-            npc.life = npc.lifeMax;
-            npc.damage = (int)(npc.damage * 1.2f);
-            npc.npcSlots = MathF.Max(npc.npcSlots, 0.5f);
-        }
-
         if (RiftSystem.RiftActive)
         {
             float lifeMult = 1f + 0.15f * RiftSystem.CurrentLevel;
@@ -58,6 +50,14 @@ public class LootGlobalNPC : GlobalNPC
             npc.life = npc.lifeMax;
             npc.damage = (int)(npc.damage * dmgMult);
         }
+    }
+
+    /// <summary>该 NPC 是否为精英（词缀系统判定：Champion 档或有词缀的非 Boss）。</summary>
+    public bool IsEliteNPC(NPC npc)
+    {
+        if (npc.boss) return false;
+        if (!npc.TryGetGlobalNPC(out EnemyAffixGlobalNPC g)) return false;
+        return g.Rarity == EnemyAffixRarity.Champion || g.HasAffixes;
     }
 
     public override void OnKill(NPC npc)
@@ -74,6 +74,7 @@ public class LootGlobalNPC : GlobalNPC
         if (player == null || !player.active) return;
 
         bool isBossKill = npc.boss || IsRiftBoss;
+        bool elite = !isBossKill && IsEliteNPC(npc);
 
         // 阶段倍率：血岩/尘掉落随游戏阶段（0~7）从初始 1x 涨到上限（默认 10x）
         int stage = Progression.CurrentStage();
@@ -81,17 +82,22 @@ public class LootGlobalNPC : GlobalNPC
 
         // 血岩基础：普通 1~3 / 精英 8~15 / Boss 150~300（Boss 配得上身份）
         int shards = isBossKill ? 150 + Main.rand.Next(151)
-                    : IsElite ? 8 + Main.rand.Next(8)
+                    : elite ? 8 + Main.rand.Next(8)
                     : 1 + Main.rand.Next(3);
         // 重铸之尘基础：Boss 30~60 / 精英 3~7 / 普通 0
         int dust = isBossKill ? 30 + Main.rand.Next(31)
-                : IsElite ? 3 + Main.rand.Next(5) : 0;
+                : elite ? 3 + Main.rand.Next(5) : 0;
+
+        // 精英掉落加成：× (1 + 词缀数 × EliteDropBonusPerAffix)（词缀越多越值钱）
+        float eliteBonus = 1f;
+        if (elite && npc.TryGetGlobalNPC(out EnemyAffixGlobalNPC eag) && eag.HasAffixes)
+            eliteBonus = 1f + eag.Affixes.Count * (EnemyAffixConfig.Instance?.EliteDropBonusPerAffix ?? 0.15f);
 
         // 阶段倍率 → 难度倍率（专家 1.5 / 大师 2）→ 各自可配置的货币倍率（血岩 / 重铸之尘分开）
         var cfg = LooteriaConfig.Instance;
         float diff = Main.masterMode ? 2f : Main.expertMode ? 1.5f : 1f;
-        shards = (int)(shards * stageMult * diff * (cfg?.BloodShardRate ?? 1f));
-        dust = (int)(dust * stageMult * diff * (cfg?.DustRate ?? 1f));
+        shards = (int)(shards * stageMult * diff * eliteBonus * (cfg?.BloodShardRate ?? 1f));
+        dust = (int)(dust * stageMult * diff * eliteBonus * (cfg?.DustRate ?? 1f));
 
         var lp = player.GetModPlayer<LooteriaPlayer>();
         if (shards > 0) lp.BloodShards += shards;
