@@ -26,7 +26,13 @@
 | 按键/命令 | 说明 |
 |---|---|
 | `P` | 开/关掠夺面板（单机暂停；含「说明」页 = 游戏内查看全部玩法文档） |
-| `/loot roll <稀有度>` | 给手持物品掷稀有度（none/magic/rare/legendary/set 或 0-4） |
-| `/loot clear` / `/loot info` / `/loot tier` | 清除词缀 / 查看词缀 / 查看档位 |
-| `/loot salvage` | 拆解手持词缀装备 → 重铸之尘 |
-| `/loot shards <n>` / `/loot dust <n>` | 设置血岩/重铸之尘（测试） |
+| `/loot info` | 查看手持物品词缀详情（稀有度/tier/力量/插槽/传说之力/套装） |
+| `/loot tier` | 查看手持物品 tier、类别、是否可打宝 |
+| `/loot riftinfo` | 秘境诊断：层上限/刷怪池/关底 Boss（完整信息写日志，聊天给摘要） |
+| `/lootadmin roll <稀有度>` | 给手持物品掷稀有度（none/magic/rare/legendary/set 或 0-4） |
+| `/lootadmin clear` | 清除手持物品词缀 |
+| `/lootadmin salvage` | 拆解手持词缀装备 → 重铸之尘（力量÷拆解除数，默认 2） |
+| `/lootadmin shards <n>` / `/lootadmin 血岩 <n>` | 设置血岩（测试） |
+| `/lootadmin dust <n>` / `/lootadmin 重铸之尘 <n>` | 设置重铸之尘（测试） |
+
+> **写操作权限**：`/lootadmin` 系列仅**服务器控制台 / 单机聊天**可用；多人聊天里任何玩家敲写操作都会被拒绝（防作弊，H3）。只读命令 `/loot info|tier|riftinfo` 任意玩家可用。
