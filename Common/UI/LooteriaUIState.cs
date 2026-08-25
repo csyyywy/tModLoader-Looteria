@@ -63,8 +63,23 @@ public partial class LooteriaUIState : UIState
     private List<AffixRoll>? _rerollAllRolls; // 重铸演练：全部掷出的新词缀（未确认）
     private int _consumeAction;               // 0=无；1=升档待选同名装备；2=开槽待选同名装备
     private int _hoverCoinTooltip;            // 悬停按钮的钱币花销（>0 时在 UI 树绘制完后画悬浮框）
+    private bool _hoverPowerLabel;            // 本帧是否要画"力量: 数值"悬浮框（悬停"力量"标签时置位）
 
     private static string T(string key) => Language.GetTextValue($"Mods.Looteria.UI.{key}");
+
+    /// <summary>在文本旁追加"力量"标签：悬停时弹出"力量: 数值"悬浮框（原版样式，由 Draw 最后绘制）。</summary>
+    private static void AddPowerTag(UIPanel panel, int top, float scale, Color color)
+    {
+        var tag = new UIText(T("Power"), scale)
+        {
+            Top = new StyleDimension(top, 0f),
+            Left = new StyleDimension(8f, 0f),
+            TextColor = color
+        };
+        tag.OnMouseOver += (_, _) => { Instance._hoverPowerLabel = true; };
+        tag.OnMouseOut += (_, _) => { Instance._hoverPowerLabel = false; };
+        panel.Append(tag);
+    }
 
     /// <summary>R11：服务端操作回执的客户端反馈（GambleService.ApplyOpResult 调用）。</summary>
     public void ShowOpResult(string msgKey, bool ok)
@@ -80,6 +95,34 @@ public partial class LooteriaUIState : UIState
         else
             _gambleLog = T("OpFailed");
         Rebuild();
+    }
+
+    /// <summary>悬停 UI 物品格时，用原版 tooltip 完整展示该物品（含本模组词缀/插槽/套装/传说/力量）。</summary>
+    private static void ShowHoverItemTooltip(Item item)
+    {
+        if (item == null || item.IsAir) return;
+        // 每帧克隆：tML 的 MouseText_DrawItemTooltip 会对 HoverItem.knockBack 原地乘潜行加成（×1.5），
+        // 复用同一实例会每帧累乘 → 击退指数爆炸（面板内击退无限上升根因）。原版也是每帧克隆背包物品。
+        Main.HoverItem = item.Clone();
+        Main.instance.MouseText("");
+    }
+
+    /// <summary>弹出一个"力量: 数值"的原版样式悬浮框（在鼠标旁、始终最上层）。</summary>
+    private void ShowPowerTooltip(int power)
+    {
+        var font = FontAssets.MouseText.Value;
+        string text = T("Power") + ": " + power;
+        var sz = font.MeasureString(text) * 0.8f;
+        float boxW = sz.X + 24f;
+        float boxH = 34f;
+        var mouse = Main.MouseScreen;
+        var rect = new Rectangle((int)mouse.X + 14, (int)mouse.Y + 14, (int)boxW, (int)boxH);
+        if (rect.Right > Main.screenWidth - 8) rect.X = Main.screenWidth - rect.Width - 8;
+        if (rect.Bottom > Main.screenHeight - 8) rect.Y = Main.screenHeight - rect.Height - 8;
+        Utils.DrawInvBG(Main.spriteBatch, rect, new Color(23, 25, 81, 255) * 0.925f);
+        float tx = rect.X + (rect.Width - sz.X) / 2f;
+        float ty = rect.Y + (rect.Height - font.MeasureString(text).Y * 0.8f) / 2f;
+        Utils.DrawBorderStringFourWay(Main.spriteBatch, font, text, tx, ty, Color.LightGray, Color.Black, Vector2.Zero, 0.8f);
     }
 
     /// <summary>M5：清空重铸演练状态（切页/换选物品时调用，防演练词缀写入别的物品）。</summary>
@@ -173,10 +216,22 @@ public partial class LooteriaUIState : UIState
     public override void Draw(SpriteBatch spriteBatch)
     {
         base.Draw(spriteBatch);
+        // 各按钮登记的"花费"悬浮框（钱币）
         int copper = _hoverCoinTooltip;
         _hoverCoinTooltip = 0; // 每帧重置，只有当前帧有按钮悬停时才画
-        if (copper <= 0) return;
-
+        if (copper > 0) DrawCostTooltip(copper);
+        // 力量悬浮框（悬停"力量"标签时显示选中物品的力量数值）
+        if (_hoverPowerLabel)
+        {
+            _hoverPowerLabel = false;
+            var sel = GetSelected(Main.LocalPlayer);
+            if (sel != null && sel.TryGetGlobalItem(out AffixGlobalItem ag) && ag.HasAffix)
+                ShowPowerTooltip(ag.PowerScore);
+        }
+    }
+    /// <summary>画"花费 [钱币图标]"悬浮框（在鼠标旁、始终最上层）。</summary>
+    private void DrawCostTooltip(int copper)
+    {
         var font = FontAssets.MouseText.Value;
         string costText = T("Cost") + ": ";
         var sz = font.MeasureString(costText) * 0.8f;
@@ -190,12 +245,13 @@ public partial class LooteriaUIState : UIState
         // 保持屏幕内
         if (rect.Right > Main.screenWidth - 8) rect.X = Main.screenWidth - rect.Width - 8;
         if (rect.Bottom > Main.screenHeight - 8) rect.Y = Main.screenHeight - rect.Height - 8;
-        Utils.DrawInvBG(spriteBatch, rect, new Color(23, 25, 81, 255) * 0.925f);
+        var sb = Main.spriteBatch;
+        Utils.DrawInvBG(sb, rect, new Color(23, 25, 81, 255) * 0.925f);
         float tx = rect.X + 10f;
         float ty = rect.Y + (rect.Height - font.MeasureString(costText).Y * 0.8f) / 2f;
-        Utils.DrawBorderStringFourWay(spriteBatch, font, costText, tx, ty, Color.White, Color.Black, Vector2.Zero, 0.8f);
+        Utils.DrawBorderStringFourWay(sb, font, costText, tx, ty, Color.White, Color.Black, Vector2.Zero, 0.8f);
         tx += sz.X + 2f;
-        DrawCoinIcons(spriteBatch, font, tx, ty - 2f, copper, Color.White, 0.75f);
+        DrawCoinIcons(sb, font, tx, ty - 2f, copper, Color.White, 0.75f);
     }
 
     public void Rebuild()

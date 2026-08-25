@@ -117,6 +117,7 @@ public partial class LooteriaUIState
                 s.Selected = slot == _selectedSlot;
                 if (affix) s.RarityHighlight = (int)rarity;
                 s.OnSlotClicked += onClick;
+                s.OnHover = ShowHoverItemTooltip;
                 row.Append(s);
             }
             list.Add(row);

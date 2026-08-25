@@ -12,6 +12,9 @@ namespace Looteria.Common.Effects;
 /// </summary>
 public static class SetBonusHandler
 {
+    /// <summary>套装激活阈值（件数，升序）——tooltip 进度展示与 Apply 共用。</summary>
+    public static readonly int[] Thresholds = { 2, 4, 6 };
+
     public static void Apply(Player player)
     {
         var counts = new Dictionary<int, int>();

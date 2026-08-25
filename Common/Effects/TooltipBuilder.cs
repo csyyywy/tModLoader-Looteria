@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using global::Looteria.Common.Data;
@@ -48,21 +49,51 @@ public static class TooltipBuilder
         if (g.LegendaryPowerId > 0)
         {
             tooltips.Add(new TooltipLine(mod, "LooteriaLegendary",
-                Language.GetTextValue($"Mods.Looteria.Legendary.{g.LegendaryPowerId}"))
+                Language.GetTextValue("Mods.Looteria.UI.LegendaryTag",
+                    Language.GetTextValue($"Mods.Looteria.Legendary.{g.LegendaryPowerId}")))
             { OverrideColor = new Color(255, 130, 0) });
         }
 
-        // 套装主题
+        // 套装主题 + 进度（所属套装名、已穿件数、各档效果与激活状态）
         if (g.SetThemeId >= 0)
         {
             string theme = Language.GetTextValue($"Mods.Looteria.Theme.{g.SetThemeId}");
             tooltips.Add(new TooltipLine(mod, "LooteriaSet",
                 Language.GetTextValue("Mods.Looteria.UI.SetTag", theme)) { OverrideColor = new Color(0, 255, 120) });
+            AppendSetProgress(mod, g, tooltips);
         }
 
-        // 力量等级
+        // 力量等级（Power 键本身不带 {0}，UI 面板手动拼数值；这里拼 ": 数值"）
         tooltips.Add(new TooltipLine(mod, "LooteriaPower",
-            Language.GetTextValue("Mods.Looteria.UI.Power", g.PowerScore)) { OverrideColor = Color.LightGray });
+            Language.GetTextValue("Mods.Looteria.UI.Power") + ": " + g.PowerScore) { OverrideColor = Color.LightGray });
+    }
+
+    /// <summary>套装进度行：当前身上同主题件数 + 2/4/6 各档效果（已激活亮绿，未激活灰并显示还差几件）。</summary>
+    private static void AppendSetProgress(Mod mod, AffixGlobalItem g, List<TooltipLine> tooltips)
+    {
+        var player = Main.LocalPlayer;
+        if (player == null) return;
+        int worn = 0;
+        // M7：只统计真实装备槽（0..9），时装位不算
+        for (int i = 0; i < AffixGlobalItem.RealEquipSlots && i < player.armor.Length; i++)
+        {
+            if (player.armor[i].TryGetGlobalItem(out AffixGlobalItem ag) && ag.SetThemeId == g.SetThemeId) worn++;
+        }
+        tooltips.Add(new TooltipLine(mod, "LooteriaSetProgress",
+            Language.GetTextValue("Mods.Looteria.UI.SetProgress", worn)) { OverrideColor = new Color(150, 255, 180) });
+
+        string[] bonusKeys = { "Mods.Looteria.UI.SetBonus2", "Mods.Looteria.UI.SetBonus4", "Mods.Looteria.UI.SetBonus6" };
+        for (int i = 0; i < SetBonusHandler.Thresholds.Length && i < bonusKeys.Length; i++)
+        {
+            int t = SetBonusHandler.Thresholds[i];
+            bool active = worn >= t;
+            string status = active
+                ? Language.GetTextValue("Mods.Looteria.UI.SetActive")
+                : Language.GetTextValue("Mods.Looteria.UI.SetNeed", t - worn);
+            tooltips.Add(new TooltipLine(mod, "LooteriaSetBonus" + t,
+                $"{Language.GetTextValue(bonusKeys[i])} · {status}")
+            { OverrideColor = active ? new Color(0, 255, 120) : new Color(140, 145, 160) });
+        }
     }
 
     /// <summary>数值显示：百分比整数，平坦 1 位小数。</summary>

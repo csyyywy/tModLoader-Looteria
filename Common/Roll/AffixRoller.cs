@@ -110,14 +110,37 @@ public static class AffixRoller
         return RollAffixList(item, tier, g.Rarity, g.SetThemeId >= 0 ? g.SetThemeId : null);
     }
 
-    /// <summary>升一档稀有度（成功率可配置，默认 30%，失败不降级）。返回是否升级。</summary>
+    /// <summary>
+    /// 升一档稀有度（成功率可配置，默认 30%，失败不降级）。
+    /// ⚠️ 保留式升级（修复"升档后词条变少/插槽变少"）：只升级稀有度并补齐新稀有度的专属项
+    /// （传说之力 / 套装主题 / 自带插槽），【不重掷词缀、不动已有插槽与宝石】。
+    /// 返回是否升级。
+    /// </summary>
     public static bool UpgradeRarity(Item item, AffixGlobalItem g)
     {
         if (g == null || g.Rarity == LootRarity.None || g.Rarity >= LootRarity.Set) return false;
         float chance = LooteriaConfig.Instance?.UpgradeRarityChance ?? 0.30f;
         if (Main.rand.NextFloat() >= chance) return false;
         var next = (LootRarity)((int)g.Rarity + 1);
-        Roll(item, g, next);
+        g.Rarity = next;
+
+        // 传说：原来没有传说之力才掷一条（升档新增，不覆盖已有）
+        if (next == LootRarity.Legendary && g.LegendaryPowerId <= 0)
+            g.LegendaryPowerId = (int)LegendaryPowerDatabase.PickRandom();
+        // 套装：原来没有主题才掷（升级到套装获得主题）
+        if (next == LootRarity.Set && g.SetThemeId < 0)
+            g.SetThemeId = (byte)SetThemeDatabase.PickRandom();
+        // 传说/套装自带插槽：一个都没有才补 1~2 个（已有插槽/宝石一律保留）
+        if (RarityInfo.HasSockets(next) && g.SocketCount <= 0)
+        {
+            g.SocketCount = Main.rand.NextBool(3) ? 2 : 1;
+            g.Sockets = new List<int>();
+            for (int i = 0; i < g.SocketCount; i++) g.Sockets.Add(0);
+        }
+
+        ApplyValue(item, g);       // 价值按新稀有度倍率（BaseValue 幂等保留原值）
+        g.PowerScore = PowerScore(g);
+        g.Checked = true;
         return true;
     }
 

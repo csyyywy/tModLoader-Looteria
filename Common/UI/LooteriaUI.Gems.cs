@@ -55,6 +55,22 @@ public partial class LooteriaUIState
         }
         AddSectionTitle(_content, $"{item.Name} · {T("Power")} {g.PowerScore} · {T("Sockets")} {g.SocketCount}/{MaxSockets}",
             RarityInfo.Colors[Math.Clamp((int)g.Rarity, 0, RarityInfo.Count - 1)], ref top); // M14：半钳制补全
+        // 力量标签（悬停弹出"力量: 数值"悬浮框）
+        AddPowerTag(_content, top, 0.8f, Color.LightGray);
+        // 传说之力 / 套装主题（与悬浮框同文案，选中物品一眼可辨）
+        if (g.LegendaryPowerId > 0)
+        {
+            AddLabel(_content, "  " + Language.GetTextValue("Mods.Looteria.UI.LegendaryTag",
+                Language.GetTextValue($"Mods.Looteria.Legendary.{g.LegendaryPowerId}")),
+                ref top, 0.8f, new Color(255, 130, 0));
+            top += 20;
+        }
+        if (g.SetThemeId >= 0)
+        {
+            string theme = Language.GetTextValue($"Mods.Looteria.Theme.{g.SetThemeId}");
+            AddLabel(_content, "  " + Language.GetTextValue("Mods.Looteria.UI.SetTag", theme), ref top, 0.8f, new Color(0, 255, 120));
+            top += 20;
+        }
 
         // 插槽列表（点击：空槽=镶入选中宝石；有宝石=取下返还）
         if (g.SocketCount > 0)

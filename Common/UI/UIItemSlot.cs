@@ -42,6 +42,12 @@ public class UIItemSlot : UIElement
     /// <summary>点击回调（构造里接线到 OnLeftClick）。</summary>
     public Action<UIItemSlot>? OnSlotClicked;
 
+    /// <summary>
+    /// 悬停展示回调（可空）。为空时用默认行为：直接往 Main.HoverItem 塞克隆物品（原版 tooltip）。
+    /// 面板需要展示"力量: 数值"这类补充行时，可传自定义实现。
+    /// </summary>
+    public Action<Item>? OnHover;
+
     protected override void DrawSelf(SpriteBatch spriteBatch)
     {
         base.DrawSelf(spriteBatch);
@@ -57,8 +63,12 @@ public class UIItemSlot : UIElement
             Main.LocalPlayer.mouseInterface = true;
             if (Item != null && !Item.IsAir)
             {
-                Main.HoverItem = Item.Clone(); // 每帧干净克隆（tML 会原地改它）
-                Main.instance.MouseText("");
+                if (OnHover != null) OnHover(Item);
+                else
+                {
+                    Main.HoverItem = Item.Clone(); // 每帧干净克隆（tML 会原地改它）
+                    Main.instance.MouseText("");
+                }
             }
         }
 

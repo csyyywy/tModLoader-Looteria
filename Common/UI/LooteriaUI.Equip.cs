@@ -42,6 +42,30 @@ public partial class LooteriaUIState
         }
         AddSectionTitle(_content, $"{item.Name} · {T("Power")} {g.PowerScore}", RarityInfo.Colors[Math.Clamp((int)g.Rarity, 0, RarityInfo.Count - 1)], ref top); // M14
         AddCoinLabel(_content, $"{T("Value")}: ", item.value, ref top, 0.8f, Color.LightGray); // 原版钱币图标
+        // 力量标签（悬停弹出"力量: 数值"悬浮框）
+        AddPowerTag(_content, top, 0.8f, Color.LightGray);
+        // 传说之力（橙色，与悬浮框同文案）
+        if (g.LegendaryPowerId > 0)
+        {
+            AddLabel(_content, "  " + Language.GetTextValue("Mods.Looteria.UI.LegendaryTag",
+                Language.GetTextValue($"Mods.Looteria.Legendary.{g.LegendaryPowerId}")),
+                ref top, 0.8f, new Color(255, 130, 0));
+            top += 20;
+        }
+        // 套装主题 + 进度（与悬浮框同文案）
+        if (g.SetThemeId >= 0)
+        {
+            string theme = Language.GetTextValue($"Mods.Looteria.Theme.{g.SetThemeId}");
+            AddLabel(_content, "  " + Language.GetTextValue("Mods.Looteria.UI.SetTag", theme), ref top, 0.8f, new Color(0, 255, 120));
+            top += 20;
+            int worn = 0;
+            for (int i = 0; i < AffixGlobalItem.RealEquipSlots && i < player.armor.Length; i++)
+            {
+                if (player.armor[i].TryGetGlobalItem(out AffixGlobalItem ag) && ag.SetThemeId == g.SetThemeId) worn++;
+            }
+            AddLabel(_content, "  " + Language.GetTextValue("Mods.Looteria.UI.SetProgress", worn), ref top, 0.8f, new Color(150, 255, 180));
+            top += 20;
+        }
         foreach (var line in FormatAffixLines(g))
         {
             AddLabel(_content, "  " + line, ref top, 0.8f, new Color(255, 200, 0));
@@ -96,6 +120,30 @@ public partial class LooteriaUIState
 
         AddSectionTitle(_content, $"{item.Name} · {T("Power")} {g.PowerScore}", RarityInfo.Colors[Math.Clamp((int)g.Rarity, 0, RarityInfo.Count - 1)], ref top); // M14
         AddCoinLabel(_content, $"{T("Value")}: ", item.value, ref top, 0.8f, Color.LightGray); // 原版钱币图标（含铂金）
+        // 力量标签（悬停弹出"力量: 数值"悬浮框）
+        AddPowerTag(_content, top, 0.8f, Color.LightGray);
+        // 传说之力（橙色，与悬浮框同文案）
+        if (g.LegendaryPowerId > 0)
+        {
+            AddLabel(_content, "  " + Language.GetTextValue("Mods.Looteria.UI.LegendaryTag",
+                Language.GetTextValue($"Mods.Looteria.Legendary.{g.LegendaryPowerId}")),
+                ref top, 0.8f, new Color(255, 130, 0));
+            top += 20;
+        }
+        // 套装主题 + 进度（与悬浮框同文案）
+        if (g.SetThemeId >= 0)
+        {
+            string theme = Language.GetTextValue($"Mods.Looteria.Theme.{g.SetThemeId}");
+            AddLabel(_content, "  " + Language.GetTextValue("Mods.Looteria.UI.SetTag", theme), ref top, 0.8f, new Color(0, 255, 120));
+            top += 20;
+            int worn = 0;
+            for (int i = 0; i < AffixGlobalItem.RealEquipSlots && i < player.armor.Length; i++)
+            {
+                if (player.armor[i].TryGetGlobalItem(out AffixGlobalItem ag) && ag.SetThemeId == g.SetThemeId) worn++;
+            }
+            AddLabel(_content, "  " + Language.GetTextValue("Mods.Looteria.UI.SetProgress", worn), ref top, 0.8f, new Color(150, 255, 180));
+            top += 20;
+        }
 
         // 当前钱币（你身上+银行全部，同原版商店口径）；消耗已写在各操作按钮内
         long wallet = PlayerCoins(player);

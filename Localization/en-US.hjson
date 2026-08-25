@@ -551,6 +551,14 @@ Mods: {
 			Power: Power
 			Sockets: Sockets
 			SocketsCount: Sockets: {0}
+			SetTag: Set · {0}
+			SetProgress: Wearing {0} (same theme)
+			SetActive: Active
+			SetNeed: {0} more
+			SetBonus2: 2 pc: +5% all damage
+			SetBonus4: 4 pc: +10% all damage, +5% DR
+			SetBonus6: 6 pc: +20% all damage, +8% DR, +10% move speed
+			LegendaryTag: Legendary Power · {0}
 			SocketGemSel: Gem bag (click a gem to select for socketing)
 			SocketGemHeld: Selected
 			SocketEquipSel: Equipment & sockets (pick an item, then click a socket)

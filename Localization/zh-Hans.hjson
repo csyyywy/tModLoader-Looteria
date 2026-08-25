@@ -551,6 +551,14 @@ Mods: {
 			Power: 力量
 			Sockets: 插槽
 			SocketsCount: 插槽: {0}
+			SetTag: 套装 · {0}
+			SetProgress: 已穿戴 {0} 件（同主题）
+			SetActive: 已激活
+			SetNeed: 还差 {0} 件
+			SetBonus2: 2 件：+5% 全伤害
+			SetBonus4: 4 件：+10% 全伤害、+5% 减伤
+			SetBonus6: 6 件：+20% 全伤害、+8% 减伤、+10% 移速
+			LegendaryTag: 传说之力 · {0}
 			SocketGemSel: 宝石背包（点击选择要镶嵌的宝石）
 			SocketGemHeld: 已选
 			SocketEquipSel: 装备与插槽（先选装备，再点插槽）
