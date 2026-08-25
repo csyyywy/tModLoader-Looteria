@@ -83,6 +83,12 @@ Mods: {
 					Label: 排除的敌人（显示名）
 					Tooltip: 列表中的敌人（按显示名）不附加任何词缀。输入英文/中文显示名均可。
 				}
+
+				AffixValueOverrides: {
+					Label: 词缀数值覆盖
+					Tooltip: 逐词缀数值倍率覆盖。key = 词缀英文 Key（如 Strong/Berserk/Thorns），value = 倍率（0 = 默认）。
+					例：{"Strong": 3} → 强壮生命加成 ×3；{"Thorns": 0} → 关掉荆棘反伤。适用于生命/伤害/防御/减伤/荆棘/吸血/再生/移速/爆炸/分裂数值。
+				}
 			}
 
 			LooteriaConfig: {
@@ -490,7 +496,6 @@ Mods: {
 			RarityCommon: 变异
 			RarityChampion: 精英
 			RarityBoss: Boss词缀
-
 			Strong: 强壮
 			Berserk: 狂暴
 			Ironhide: 铁壁
@@ -506,7 +511,6 @@ Mods: {
 			Split: 分裂
 			Summoner: 召唤
 			Explosive: 爆炸
-
 			Apocalypse: 天启
 			Immortal: 不朽
 			Annihilation: 湮灭
@@ -679,6 +683,40 @@ Mods: {
 			SetBonus4: 4 件：+10% 全伤害、+5% 减伤
 			SetBonus6: 6 件：+20% 全伤害、+8% 减伤、+10% 移速
 			LegendaryTag: 传说之力 · {0}
+			CharSheetTitle: 角色属性
+			SlotHead: 头盔
+			SlotChest: 胸甲
+			SlotLegs: 腿甲
+			SlotAcc: 饰品
+			SlotHook: 钩爪
+			SlotShield: 盾牌/坐骑
+			SlotHeld: 手持
+			SetNone: 未穿戴套装
+			SetBonusHint: 同主题 2/4/6 件触发套装加成
+			PowerTip: 掠夺之力 = 10×档位 + Σ(词缀值×权重) + 插槽/传说/套装加成。合计 7 件装备的力量 = 掠夺之力，用于秘境门槛。
+			StatSectionCombat: 战斗
+			StatSectionDefense: 防御
+			StatSectionMobility: 机动
+			StatSectionOnHit: 命中
+			StatSectionResist: 状态免疫
+			StatDamage: 全伤害加成
+			StatCritChance: 暴击率
+			StatCritDamage: 暴击伤害
+			StatAttackSpeed: 攻击速度
+			StatLife: 生命
+			StatMana: 魔力
+			StatDefense: 防御
+			StatDamageReduction: 减伤
+			StatLifeRegen: 生命回复
+			StatManaRegen: 魔力回复
+			StatMoveSpeed: 移动速度
+			StatLifeOnHit: 命中回血
+			StatManaOnHit: 命中回蓝
+			StatBuffResistPoison: 免疫中毒
+			StatBuffResistFire: 免疫燃烧
+			StatBuffResistBleed: 免疫流血
+			StatBuffResistCurse: 免疫诅咒焰
+			StatBuffResistSlow: 免疫减速
 			SocketGemSel: 宝石背包（点击选择要镶嵌的宝石）
 			SocketGemHeld: 已选
 			SocketEquipSel: 装备与插槽（先选装备，再点插槽）
@@ -769,5 +807,6 @@ Mods: {
 		}
 
 		Keybinds.LooteriaPanel.DisplayName: 掠夺面板
+		Keybinds.LooteriaCharSheet.DisplayName: 角色属性面板
 	}
 }

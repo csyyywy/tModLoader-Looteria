@@ -173,6 +173,18 @@ public static class EnemyAffixDatabase
         return m * StageScale();
     }
 
+    /// <summary>
+    /// 词缀覆盖倍率：配置 AffixValueOverrides 里按词缀 Key 覆盖（>0 用覆盖值替换 1x，0 用默认）。
+    /// 应用到词缀的【基础数值】上（在 ×PowerMult 之前）。
+    /// </summary>
+    private static float Ov(EnemyAffixId id, float baseVal)
+    {
+        var cfg = EnemyAffixConfig.Instance;
+        if (cfg == null) return baseVal;
+        float ov = cfg.GetAffixOverride(Key(id));
+        return ov > 0f ? baseVal * ov : baseVal;
+    }
+
     /// <summary>生命乘数（含配置上限 clamp；记录到 g.LifeMult 供秘境防线还原）。</summary>
     public static float LifeMultFor(EnemyAffixId id, bool champion)
     {
@@ -180,8 +192,8 @@ public static class EnemyAffixDatabase
         float cap = cfg?.LifeMultCap ?? 4f;
         float m = id switch
         {
-            EnemyAffixId.Strong => champion ? 2.0f : 1.5f,
-            EnemyAffixId.Immortal => 2.0f,
+            EnemyAffixId.Strong => Ov(id, champion ? 2.0f : 1.5f),
+            EnemyAffixId.Immortal => Ov(id, 2.0f),
             _ => 1f,
         };
         return System.Math.Min(cap, m * PowerMult());
@@ -194,8 +206,8 @@ public static class EnemyAffixDatabase
         float cap = cfg?.DamageMultCap ?? 4f;
         float m = id switch
         {
-            EnemyAffixId.Berserk => champion ? 1.6f : 1.3f,
-            EnemyAffixId.Apocalypse => 1.75f,
+            EnemyAffixId.Berserk => Ov(id, champion ? 1.6f : 1.3f),
+            EnemyAffixId.Apocalypse => Ov(id, 1.75f),
             _ => 1f,
         };
         return System.Math.Min(cap, m * PowerMult());
@@ -206,8 +218,8 @@ public static class EnemyAffixDatabase
     {
         float m = id switch
         {
-            EnemyAffixId.Ironhide => 0.10f,
-            EnemyAffixId.Unbreakable => 0.20f,
+            EnemyAffixId.Ironhide => Ov(id, 0.10f),
+            EnemyAffixId.Unbreakable => Ov(id, 0.20f),
             _ => 0f,
         };
         return System.Math.Min(0.8f, m * PowerMult());
@@ -218,8 +230,8 @@ public static class EnemyAffixDatabase
     {
         float m = id switch
         {
-            EnemyAffixId.Ironhide => 10f,
-            EnemyAffixId.Unbreakable => 30f,
+            EnemyAffixId.Ironhide => Ov(id, 10f),
+            EnemyAffixId.Unbreakable => Ov(id, 30f),
             _ => 0f,
         };
         return (int)(m * PowerMult());
@@ -228,32 +240,32 @@ public static class EnemyAffixDatabase
     /// <summary>荆棘固定反伤（不随玩家伤害放大；× PowerMult 全局倍率）。</summary>
     public static int ThornsDamageFor(EnemyAffixId id) => id switch
     {
-        EnemyAffixId.Thorns => 15,
-        EnemyAffixId.ThornsCrown => 30,
+        EnemyAffixId.Thorns => (int)(Ov(id, 15f) * PowerMult()),
+        EnemyAffixId.ThornsCrown => (int)(Ov(id, 30f) * PowerMult()),
         _ => 0,
     };
 
     /// <summary>吸血（攻击造成伤害的 % 回复自身，0~0.5）。</summary>
     public static float LifestealFor(EnemyAffixId id) => id switch
     {
-        EnemyAffixId.Vampiric => 0.05f,
-        EnemyAffixId.VampireLord => 0.10f,
+        EnemyAffixId.Vampiric => Ov(id, 0.05f),
+        EnemyAffixId.VampireLord => Ov(id, 0.10f),
         _ => 0f,
     };
 
     /// <summary>再生（每秒回复最大生命 %，0~0.1）。</summary>
     public static float RegenPctFor(EnemyAffixId id) => id switch
     {
-        EnemyAffixId.Regen => 0.01f,
-        EnemyAffixId.Immortal => 0.02f,
+        EnemyAffixId.Regen => Ov(id, 0.01f),
+        EnemyAffixId.Immortal => Ov(id, 0.02f),
         _ => 0f,
     };
 
     /// <summary>移速加成（% 每帧，仅 AI 近似，0~0.6）。</summary>
     public static float SpeedMultFor(EnemyAffixId id) => id switch
     {
-        EnemyAffixId.Swift => 0.25f,
-        EnemyAffixId.SwiftHunter => 0.40f,
+        EnemyAffixId.Swift => Ov(id, 0.25f),
+        EnemyAffixId.SwiftHunter => Ov(id, 0.40f),
         _ => 0f,
     };
 
@@ -282,10 +294,10 @@ public static class EnemyAffixDatabase
     /// <summary>分裂/召唤：死亡时生成的小怪比例（0=无）。</summary>
     public static float SplitRatioFor(EnemyAffixId id) => id switch
     {
-        EnemyAffixId.Split => 0.5f,
-        EnemyAffixId.Summoner => 0.2f,
-        EnemyAffixId.SplitRampage => 0.4f,
-        EnemyAffixId.Warlord => 0.2f,
+        EnemyAffixId.Split => Ov(id, 0.5f),
+        EnemyAffixId.Summoner => Ov(id, 0.2f),
+        EnemyAffixId.SplitRampage => Ov(id, 0.4f),
+        EnemyAffixId.Warlord => Ov(id, 0.2f),
         _ => 0f,
     };
 
@@ -302,8 +314,8 @@ public static class EnemyAffixDatabase
     /// <summary>死亡爆炸半径（px，0=无）。</summary>
     public static float ExplosionRadiusFor(EnemyAffixId id) => id switch
     {
-        EnemyAffixId.Explosive => 160f,
-        EnemyAffixId.Annihilation => 300f,
+        EnemyAffixId.Explosive => Ov(id, 160f),
+        EnemyAffixId.Annihilation => Ov(id, 300f),
         _ => 0f,
     };
 

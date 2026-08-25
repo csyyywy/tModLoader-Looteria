@@ -119,7 +119,7 @@ public class LooteriaPlayer : ModPlayer
         GearPower = sum;
     }
 
-    /// <summary>热键：开/关掠夺面板。</summary>
+    /// <summary>热键：开/关掠夺面板 + 角色属性面板。</summary>
     public override void ProcessTriggers(TriggersSet triggersSet)
     {
         if (Common.Systems.UISystem.PanelKeybind.JustPressed)
@@ -131,8 +131,33 @@ public class LooteriaPlayer : ModPlayer
             }
             else
             {
+                // 互斥：打开掠夺面板前关闭角色面板
+                if (Common.Systems.UISystem.CharSheetOpen)
+                {
+                    IngameFancyUI.Close();
+                    Common.Systems.UISystem.CharSheetOpen = false;
+                }
                 IngameFancyUI.OpenUIState(Common.UI.LooteriaUIState.Instance);
                 Common.Systems.UISystem.PanelOpen = true;
+            }
+        }
+        else if (Common.Systems.UISystem.CharSheetKeybind.JustPressed)
+        {
+            if (Common.Systems.UISystem.CharSheetOpen)
+            {
+                IngameFancyUI.Close();
+                Common.Systems.UISystem.CharSheetOpen = false;
+            }
+            else
+            {
+                // 互斥：打开角色面板前关闭掠夺面板
+                if (Common.Systems.UISystem.PanelOpen)
+                {
+                    IngameFancyUI.Close();
+                    Common.Systems.UISystem.PanelOpen = false;
+                }
+                IngameFancyUI.OpenUIState(Common.UI.CharacterSheetUI.Instance);
+                Common.Systems.UISystem.CharSheetOpen = true;
             }
         }
     }

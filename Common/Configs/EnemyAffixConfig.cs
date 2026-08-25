@@ -104,8 +104,23 @@ public class EnemyAffixConfig : ModConfig
     /// <summary>按显示名排除的 NPC（不附加词缀；Boss 专属也可排除）。</summary>
     public List<string> ExcludedNpcs = new();
 
+    /// <summary>
+    /// 词缀数值覆盖：key = 词缀英文 Key（如 "Strong"/"Berserk"/"Thorns"），value = 覆盖倍率（0 = 用默认）。
+    /// 例：{"Strong": 3} → 「强壮」生命加成 ×3；{"Thorns": 0} → 关掉荆棘反伤。
+    /// 适用于：数值类词缀（生命/伤害/防御/减伤/荆棘/吸血/再生/移速/爆炸半径/分裂比例）。
+    /// </summary>
+    public Dictionary<string, float> AffixValueOverrides = new();
+
     private static EnemyAffixConfig? _instance;
     public static EnemyAffixConfig Instance => _instance ??= ModContent.GetInstance<EnemyAffixConfig>();
+
+    /// <summary>查询词缀覆盖倍率（0 = 无覆盖，用默认）。</summary>
+    public float GetAffixOverride(string key)
+    {
+        if (AffixValueOverrides != null && AffixValueOverrides.TryGetValue(key, out float v))
+            return v;
+        return 0f;
+    }
 
     /// <summary>是否在排除列表（按显示名）。</summary>
     public bool IsExcluded(NPC npc)

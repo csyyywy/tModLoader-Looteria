@@ -83,6 +83,12 @@ Mods: {
 					Label: Excluded Enemies (Display Name)
 					Tooltip: Enemies in this list (by display name) never get affixes. English or Chinese names both work.
 				}
+
+				AffixValueOverrides: {
+					Label: Affix Value Overrides
+					Tooltip: Per-affix numeric multiplier overrides. key = affix English Key (e.g. Strong/Berserk/Thorns), value = multiplier (0 = default).
+					Example: {"Strong": 3} → Strong life bonus ×3; {"Thorns": 0} → disable thorns reflect. Applies to life/damage/defense/DR/thorns/lifesteal/regen/speed/explosion/split values.
+				}
 			}
 
 			LooteriaConfig: {
@@ -490,7 +496,6 @@ Mods: {
 			RarityCommon: Mutated
 			RarityChampion: Elite
 			RarityBoss: Boss
-
 			Strong: Strong
 			Berserk: Berserk
 			Ironhide: Ironhide
@@ -506,7 +511,6 @@ Mods: {
 			Split: Splitting
 			Summoner: Summoner
 			Explosive: Explosive
-
 			Apocalypse: Apocalypse
 			Immortal: Immortal
 			Annihilation: Annihilation
@@ -679,6 +683,40 @@ Mods: {
 			SetBonus4: 4 pc: +10% all damage, +5% DR
 			SetBonus6: 6 pc: +20% all damage, +8% DR, +10% move speed
 			LegendaryTag: Legendary Power · {0}
+			CharSheetTitle: Character Sheet
+			SlotHead: Helmet
+			SlotChest: Chestplate
+			SlotLegs: Leggings
+			SlotAcc: Accessory
+			SlotHook: Hook
+			SlotShield: Shield/Mount
+			SlotHeld: Held
+			SetNone: No set worn
+			SetBonusHint: Same-theme 2/4/6 pieces trigger set bonuses
+			PowerTip: Gear Power = 10×tier + Σ(affix value×weight) + socket/legendary/set bonuses. Gear Power of all 7 equipped slots = Rift requirement.
+			StatSectionCombat: Combat
+			StatSectionDefense: Defense
+			StatSectionMobility: Mobility
+			StatSectionOnHit: On Hit
+			StatSectionResist: Status Immunity
+			StatDamage: Total Damage Bonus
+			StatCritChance: Crit Chance
+			StatCritDamage: Crit Damage
+			StatAttackSpeed: Attack Speed
+			StatLife: Health
+			StatMana: Mana
+			StatDefense: Defense
+			StatDamageReduction: Damage Reduction
+			StatLifeRegen: Life Regen
+			StatManaRegen: Mana Regen
+			StatMoveSpeed: Move Speed
+			StatLifeOnHit: Life on Hit
+			StatManaOnHit: Mana on Hit
+			StatBuffResistPoison: Poison Immunity
+			StatBuffResistFire: Fire Immunity
+			StatBuffResistBleed: Bleed Immunity
+			StatBuffResistCurse: Curse Immunity
+			StatBuffResistSlow: Slow Immunity
 			SocketGemSel: Gem bag (click a gem to select for socketing)
 			SocketGemHeld: Selected
 			SocketEquipSel: Equipment & sockets (pick an item, then click a socket)
@@ -769,5 +807,6 @@ Mods: {
 		}
 
 		Keybinds.LooteriaPanel.DisplayName: Looteria Panel
+		Keybinds.LooteriaCharSheet.DisplayName: Character Sheet
 	}
 }

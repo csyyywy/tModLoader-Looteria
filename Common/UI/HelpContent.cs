@@ -15,6 +15,7 @@ public static class HelpContent
         ("docs/说明-货币与秘境.md", "货币与秘境"),
         ("docs/说明-敌人词缀.md", "敌人词缀"),
         ("docs/说明-命令.md", "命令"),
+        ("docs/说明-角色属性.md", "角色属性"),
         ("docs/说明-兼容与配置.md", "兼容与配置"),
     };
 }
