@@ -96,27 +96,27 @@ Mods: {
 
 				RerollOneCoinDiv: {
 					Label: Reroll One Coin Divisor
-					Tooltip: Coin cost of rerolling one affix = item value / this value (default 500; larger = cheaper).
+					Tooltip: Coin cost of rerolling one affix = item value / this value (default 50; larger = cheaper).
 				}
 
 				RerollAllCoinDiv: {
 					Label: Reroll All Coin Divisor
-					Tooltip: Coin cost of rerolling all affixes = item value / this value (default 1000; larger = cheaper).
+					Tooltip: Coin cost of rerolling all affixes = item value / this value (default 100; larger = cheaper).
 				}
 
 				UpgradeCoinDiv: {
 					Label: Upgrade Coin Divisor
-					Tooltip: Coin cost of rarity upgrade = item value / this value (default 500; larger = cheaper).
+					Tooltip: Coin cost of rarity upgrade = item value / this value (default 50; larger = cheaper).
 				}
 
 				SocketCoinDiv: {
 					Label: Socket Coin Divisor
-					Tooltip: Coin cost of opening a socket = item value / this value (default 1000; larger = cheaper).
+					Tooltip: Coin cost of opening a socket = item value / this value (default 100; larger = cheaper).
 				}
 
 				GemUpgradeCoinDiv: {
 					Label: Gem Upgrade Coin Divisor
-					Tooltip: Coin cost of gem enhancement = gem value / this value (default 500; larger = cheaper).
+					Tooltip: Coin cost of gem enhancement = gem value / this value (default 50; larger = cheaper).
 				}
 
 				EliteChance: {
@@ -587,6 +587,9 @@ Mods: {
 			CoinGold: g
 			CoinSilver: s
 			CoinCopper: c
+			WalletCurrent: Now
+			WalletCost: Cost
+			WalletRemain: Left
 			RiftTitle: Rift (invasion · 9 min like Frost Moon)
 			RiftNext: Next
 			RiftBest: Best

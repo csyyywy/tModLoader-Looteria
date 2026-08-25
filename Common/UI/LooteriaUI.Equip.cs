@@ -97,6 +97,12 @@ public partial class LooteriaUIState
         AddSectionTitle(_content, $"{item.Name} · {T("Power")} {g.PowerScore}", RarityInfo.Colors[Math.Clamp((int)g.Rarity, 0, RarityInfo.Count - 1)], ref top); // M14
         AddCoinLabel(_content, $"{T("Value")}: ", item.value, ref top, 0.8f, Color.LightGray); // 原版钱币图标（含铂金）
 
+        // 钱包摘要：当前 / 消耗（重铸单条）/ 剩余（参照原版商店展示）
+        long wallet = PlayerCoins(player);
+        int demoCost = RerollOneCoins(item.value);
+        AddWalletLine(_content, T("WalletCurrent"), wallet, T("WalletCost"), demoCost, T("WalletRemain"),
+            Math.Max(0, wallet - demoCost), ref top, Color.LightGray);
+
         // 词缀列表：每条右侧一个"重铸"按钮（点击即扣款，进入演练，未确认不生效）
         AddSectionTitle(_content, T("RerollAffixes"), C_Cyan, ref top);
         for (int i = 0; i < g.Affixes!.Count; i++)
@@ -223,52 +229,16 @@ public partial class LooteriaUIState
         ShowMsg(ok ? T("UpgradeOk") : T("UpgradeFail"));
     }
 
-    /// <summary>先校验后扣款（尘 + 钱币），任一不足则什么都不扣。返回 0=成功 / 1=尘不足 / 2=钱币不足。</summary>
+    /// <summary>先校验后扣款（尘 + 钱币），任一不足则什么都不扣。返回 0=成功 / 1=尘不足 / 2=钱币不足。
+    /// 钱币扣款走原版商店路径（Player.BuyItem：含背包+钱币栏+银行，自动换算找零）。</summary>
     private static int TryPay(Player player, int dust, int coins)
     {
         var lp = player.GetModPlayer<LooteriaPlayer>();
         if (lp.Dust < dust) return 1;
-        if (coins > 0 && !TrySpendCoins(player, coins)) return 2;
+        if (coins > 0 && !player.BuyItem(coins)) return 2; // 原版商店扣款（含找零）
         lp.Dust -= dust;
         return 0;
     }
-
-    /// <summary>商店式钱币扣款：整栏换算成铜币→校验→清栏→找零自动拆成 铂/金/银/铜 填回。</summary>
-    private static bool TrySpendCoins(Player player, int copper)
-    {
-        if (copper <= 0) return true;
-        long total = 0; // L4：long 累加防理论溢出（高堆叠 mod 物进钱币栏时）
-        for (int i = 50; i < 54 && i < player.inventory.Length; i++)
-            total += (long)player.inventory[i].stack * CoinValue(i);
-        if (total < copper) return false;
-        for (int i = 50; i < 54 && i < player.inventory.Length; i++)
-            player.inventory[i].TurnToAir();
-        GiveChange(player, (int)(total - copper));
-        return true;
-    }
-
-    /// <summary>找零：把铜币数自动拆成 铂/金/银/铜 填回钱币栏（参考原版商店）。</summary>
-    private static void GiveChange(Player player, int copper)
-    {
-        if (copper <= 0) return;
-        int p = copper / 1000000; copper %= 1000000;
-        int g = copper / 10000; copper %= 10000;
-        int s = copper / 100; int c = copper % 100;
-        SetCoin(player, 53, ItemID.PlatinumCoin, p);
-        SetCoin(player, 52, ItemID.GoldCoin, g);
-        SetCoin(player, 51, ItemID.SilverCoin, s);
-        SetCoin(player, 50, ItemID.CopperCoin, c);
-    }
-
-    private static void SetCoin(Player player, int slot, int type, int stack)
-    {
-        if (slot >= player.inventory.Length) return;
-        if (stack <= 0) { player.inventory[slot].TurnToAir(); return; }
-        player.inventory[slot].SetDefaults(type);
-        player.inventory[slot].stack = stack;
-    }
-
-    private static int CoinValue(int slot) => (int)Math.Pow(100, slot - 50); // 50铜 51银 52金 53铂
 
     private Item? GetSelected(Player player)
     {

@@ -124,6 +124,10 @@ public partial class LooteriaUIState
         {
             int sockCoins = SocketCoins(item.value); // 钱币 = 价值 ÷ 配置除数（SocketCoinDiv）
             int sockDust = LooteriaConfig.Instance?.SocketCostDust ?? 40;
+            // 钱包摘要：当前 / 消耗（开槽）/ 剩余
+            long wallet = PlayerCoins(player);
+            AddWalletLine(_content, T("WalletCurrent"), wallet, T("WalletCost"), sockCoins, T("WalletRemain"),
+                Math.Max(0, wallet - sockCoins), ref top, Color.LightGray);
             AddCoinButton(_content, $"{T("SocketAdd")} ({g.OpenedSockets}/{MaxOpenedSockets} · {sockDust}{T("Dust")} + {T("SameItem")}) + ",
                 sockCoins, ref top, () => { if (BlockLocalCurrencyOp()) return; _consumeAction = _consumeAction == 2 ? 0 : 2; Rebuild(); }, new Color(90, 70, 130)); // R2
             if (_consumeAction == 2)
@@ -156,7 +160,7 @@ public partial class LooteriaUIState
         // 先校验后扣款
         var lp = player.GetModPlayer<LooteriaPlayer>();
         if (lp.Dust < sockDust) { Rebuild(); ShowMsg(T("NotEnoughDust")); return; }
-        if (sockCoins > 0 && !TrySpendCoins(player, sockCoins)) { Rebuild(); ShowMsg(T("NotEnoughCoins")); return; }
+        if (sockCoins > 0 && !player.BuyItem(sockCoins)) { Rebuild(); ShowMsg(T("NotEnoughCoins")); return; } // 原版商店扣款
         lp.Dust -= sockDust;
 
         player.inventory[matSlot].TurnToAir();
@@ -251,6 +255,11 @@ public partial class LooteriaUIState
         });
         top += 34;
 
+        // 钱包摘要：当前 / 消耗（宝石升阶）/ 剩余
+        long wallet = PlayerCoins(player);
+        AddWalletLine(_content, T("WalletCurrent"), wallet, T("WalletCost"), coins, T("WalletRemain"),
+            Math.Max(0, wallet - coins), ref top, Color.LightGray);
+
         AddCoinButton(_content, $"{T("GemUpgrade")} ({cost} {vName} + ", coins, ref top,
             () => { if (BlockLocalCurrencyOp()) return; UpgradeGem(player, lp, selGem, _selectedGemItemSlot); }, new Color(70, 90, 150)); // R2
         _gemMsg = AddLabel(_content, "", ref top, 0.8f, Color.OrangeRed);
@@ -275,7 +284,7 @@ public partial class LooteriaUIState
             return;
         }
         int coins = GemUpgradeCoins(gem.Item.value); // 钱币 = 宝石价值 ÷ 配置除数
-        if (!TrySpendCoins(player, coins)) { ShowMsg(T("NotEnoughCoins")); return; }
+        if (!player.BuyItem(coins)) { ShowMsg(T("NotEnoughCoins")); return; } // 原版商店扣款（含找零）
 
         int need = cost;
         for (int i = 0; i < player.inventory.Length && need > 0; i++)

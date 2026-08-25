@@ -198,19 +198,32 @@ public partial class LooteriaUIState
     private static int CoinCost(int value, int divisor) => Math.Max(1, value / Math.Max(1, divisor));
 
     /// <summary>重铸单条钱币费用（配置 RerollOneCoinDiv）。</summary>
-    private static int RerollOneCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.RerollOneCoinDiv ?? 500);
+    private static int RerollOneCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.RerollOneCoinDiv ?? 50);
 
     /// <summary>全部重铸钱币费用（配置 RerollAllCoinDiv）。</summary>
-    private static int RerollAllCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.RerollAllCoinDiv ?? 1000);
+    private static int RerollAllCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.RerollAllCoinDiv ?? 100);
 
     /// <summary>稀有度升档钱币费用（配置 UpgradeCoinDiv）。</summary>
-    private static int UpgradeCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.UpgradeCoinDiv ?? 500);
+    private static int UpgradeCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.UpgradeCoinDiv ?? 50);
 
     /// <summary>开槽钱币费用（配置 SocketCoinDiv）。</summary>
-    private static int SocketCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.SocketCoinDiv ?? 1000);
+    private static int SocketCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.SocketCoinDiv ?? 100);
 
     /// <summary>宝石升阶钱币费用（配置 GemUpgradeCoinDiv）。</summary>
-    private static int GemUpgradeCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.GemUpgradeCoinDiv ?? 500);
+    private static int GemUpgradeCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.GemUpgradeCoinDiv ?? 50);
+
+    /// <summary>玩家当前全部钱币（铜币，含背包钱币栏 + 4 个银行，同原版商店 CanAfford 口径）。</summary>
+    private static long PlayerCoins(Player player)
+    {
+        bool over;
+        long inv = Utils.CoinsCount(out over, player.inventory, 58, 57, 56, 55, 54); // 钱币栏（50-53）
+        long b1 = Utils.CoinsCount(out over, player.bank.item);    // 猪猪存钱罐
+        long b2 = Utils.CoinsCount(out over, player.bank2.item);   // 保险箱
+        long b3 = Utils.CoinsCount(out over, player.bank3.item);   // 护甲假人（锻造台）
+        long b4 = Utils.CoinsCount(out over, player.bank4.item);   // 虚空保险库
+        long total = inv + b1 + b2 + b3 + b4;
+        return total > int.MaxValue ? int.MaxValue : total;
+    }
 
     /// <summary>在 sb 上连续绘制 "数量 + 原版钱币图标"（铂/金/银/铜），返回结束 X。替代汉字单位。</summary>
     private static float DrawCoinIcons(SpriteBatch sb, DynamicSpriteFont font, float x, float y, int copper, Color textColor, float scale = 0.8f)
@@ -330,6 +343,67 @@ public partial class LooteriaUIState
             Left = new StyleDimension(8f, 0f)
         });
         top += 36;
+    }
+
+    /// <summary>钱包摘要行：当前 / 消耗 / 剩余（三组原版钱币图标）。参照原版商店的"你支付/找零"展示。</summary>
+    private class UIWalletLine : UIElement
+    {
+        public string CurrentLabel = "";
+        public long Current;
+        public string CostLabel = "";
+        public long Cost;
+        public string RemainLabel = "";
+        public long Remain;
+        public Color Color = Color.LightGray;
+
+        public UIWalletLine(string curLabel, long cur, string costLabel, long cost, string remainLabel, long remain, Color color)
+        {
+            CurrentLabel = curLabel; Current = cur;
+            CostLabel = costLabel; Cost = cost;
+            RemainLabel = remainLabel; Remain = remain;
+            Color = color;
+            Width = new StyleDimension(600f, 0f);
+            Height = new StyleDimension(28f, 0f);
+        }
+
+        protected override void DrawSelf(SpriteBatch sb)
+        {
+            base.DrawSelf(sb);
+            var d = GetDimensions();
+            var font = FontAssets.MouseText.Value;
+            float y = d.Y + 4f;
+            float x = d.X;
+            float scale = 0.75f;
+            // 当前
+            x = DrawSegment(sb, font, x, y, CurrentLabel, Current, scale);
+            // 消耗
+            x = DrawSegment(sb, font, x, y, CostLabel, Cost, scale);
+            // 剩余
+            DrawSegment(sb, font, x, y, RemainLabel, Remain, scale);
+        }
+
+        private float DrawSegment(SpriteBatch sb, DynamicSpriteFont font, float x, float y, string label, long copper, float scale)
+        {
+            if (label.Length > 0)
+            {
+                Utils.DrawBorderStringFourWay(sb, font, label, x, y, Color, Color.Black, Vector2.Zero, scale);
+                x += font.MeasureString(label).X * scale + 2f;
+            }
+            x = DrawCoinIcons(sb, font, x, y, (int)Math.Clamp(copper, 0, int.MaxValue), Color, scale);
+            x += 10f;
+            return x;
+        }
+    }
+
+    /// <summary>添加钱包摘要行：当前 / 消耗 / 剩余（原版钱币图标）。</summary>
+    private static void AddWalletLine(UIPanel panel, string curLabel, long cur, string costLabel, long cost, string remainLabel, long remain, ref int top, Color color)
+    {
+        panel.Append(new UIWalletLine(curLabel, cur, costLabel, cost, remainLabel, remain, color)
+        {
+            Top = new StyleDimension(top, 0f),
+            Left = new StyleDimension(8f, 0f)
+        });
+        top += 32;
     }
 
     /// <summary>强调色分隔线。</summary>

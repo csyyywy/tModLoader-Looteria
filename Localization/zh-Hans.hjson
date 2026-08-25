@@ -96,27 +96,27 @@ Mods: {
 
 				RerollOneCoinDiv: {
 					Label: 重铸单条钱币除数
-					Tooltip: 重铸单条的钱币费用 = 装备价值 ÷ 该值（默认 500；调大更便宜）。
+					Tooltip: 重铸单条的钱币费用 = 装备价值 ÷ 该值（默认 50；调大更便宜）。
 				}
 
 				RerollAllCoinDiv: {
 					Label: 全部重铸钱币除数
-					Tooltip: 全部重铸的钱币费用 = 装备价值 ÷ 该值（默认 1000；调大更便宜）。
+					Tooltip: 全部重铸的钱币费用 = 装备价值 ÷ 该值（默认 100；调大更便宜）。
 				}
 
 				UpgradeCoinDiv: {
 					Label: 升档钱币除数
-					Tooltip: 稀有度升档的钱币费用 = 装备价值 ÷ 该值（默认 500；调大更便宜）。
+					Tooltip: 稀有度升档的钱币费用 = 装备价值 ÷ 该值（默认 50；调大更便宜）。
 				}
 
 				SocketCoinDiv: {
 					Label: 开槽钱币除数
-					Tooltip: 开槽的钱币费用 = 装备价值 ÷ 该值（默认 1000；调大更便宜）。
+					Tooltip: 开槽的钱币费用 = 装备价值 ÷ 该值（默认 100；调大更便宜）。
 				}
 
 				GemUpgradeCoinDiv: {
 					Label: 宝石升阶钱币除数
-					Tooltip: 宝石升阶的钱币费用 = 宝石价值 ÷ 该值（默认 500；调大更便宜）。
+					Tooltip: 宝石升阶的钱币费用 = 宝石价值 ÷ 该值（默认 50；调大更便宜）。
 				}
 
 				EliteChance: {
@@ -587,6 +587,9 @@ Mods: {
 			CoinGold: 金
 			CoinSilver: 银
 			CoinCopper: 铜
+			WalletCurrent: 当前
+			WalletCost: 消耗
+			WalletRemain: 剩余
 			RiftTitle: 秘境（入侵事件 · 模仿哨兵 9 分钟）
 			RiftNext: 下一层
 			RiftBest: 最佳
