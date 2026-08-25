@@ -687,6 +687,7 @@ Mods: {
 			SetBonus6: 6 pc: +20% all damage, +8% DR, +10% move speed
 			LegendaryTag: Legendary Power · {0}
 			CharSheetTitle: Character Sheet
+			StatSectionOverview: Overview
 			SlotHead: Helmet
 			SlotChest: Chestplate
 			SlotLegs: Leggings

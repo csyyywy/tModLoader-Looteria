@@ -19,12 +19,13 @@ namespace Looteria.Common.UI;
 
 /// <summary>
 /// 角色属性面板（刷宝游戏样式）。按键 C 打开。
-/// 布局（root 1080 宽、顶部 44 起始）：
-///   [左 10..250]  角色立绘 + 力量/套装 + 坐骑/宠物
-///   [中1 260..375] 装备：头盔/胸甲/腿甲/手持
-///   [中2 385..500] 饰品：armor 3-9（未解锁变暗打叉）
-///   [右 510..1070] 属性列表（贴右边缘）
-/// 所有元素用绝对像素 Top/Left，槽位纵向排，图标与文本同 top 横向并排（不用 VAlign）。
+/// 布局（root 1080 宽，参考目标草图——立柱式）：
+///   [左 24..116]   防具（上：头盔/胸甲/腿甲）+ 武器（底部）
+///   [中 136..436]  人物立绘（大）
+///   [中下 136..436] 坐骑/宠物（肖像正下方）
+///   [中右 448..540] 饰品 armor 3-9（未解锁=叉+变暗）
+///   [右 556..1064] 属性列表（总览 + 战斗/防御/机动/命中/状态免疫，可滚动）
+/// 所有元素用绝对像素 Top/Left；槽位纵向排；图标与文本同 top 横向并排（不用 VAlign）。
 /// </summary>
 public class CharacterSheetUI : UIState
 {
@@ -39,20 +40,22 @@ public class CharacterSheetUI : UIState
     private static readonly Color C_SubBg = new(20, 22, 34);
     private static readonly Color C_Locked = new(60, 62, 78);
 
-    // 布局常量
+    // 布局常量（root 内绝对像素）
     private const float ROOT_W = 1080f;
-    private const float PANEL_TOP = 44f;
-    private const float ROOT_H = -60f; // 高 = 父高 - 60
-    private const float SIDE_W = 246f; // 左面板
-    private const float EQUIP_X = 260f, EQUIP_W = 114f;
-    private const float ACC_X = 384f, ACC_W = 114f;
-    private const float RIGHT_X = 510f, RIGHT_W = 556f;
+    private const float PANEL_TOP = 44f;       // 面板距 root 顶部（让出标题）
+    private const float EQUIP_X = 24f, EQUIP_W = 92f;
+    private const float PORTRAIT_X = 136f, PORTRAIT_W = 300f;
+    private const float PORTRAIT_H = 0.54f;    // 肖像面板高 = root 高的 54%（余下给坐骑/宠物）
+    private const float MOUNT_H = 128f;
+    private const float ACC_X = 448f, ACC_W = 92f;
+    private const float STATS_X = 552f, STATS_W = 528f; // 右缘贴 root 右缘（552+528=1080）
 
     private UIPanel _root = null!;
-    private UIPanel _left = null!;
     private UIPanel _equip = null!;
+    private UIPanel _portraitPanel = null!;
+    private UIPanel _mountPanel = null!;
     private UIPanel _acc = null!;
-    private UIPanel _right = null!;
+    private UIPanel _stats = null!;
     private PortraitElement _portrait = null!;
 
     private static readonly Dictionary<string, Asset<Texture2D>> _statIcons = new();
@@ -89,7 +92,7 @@ public class CharacterSheetUI : UIState
         {
             HAlign = 0.5f, VAlign = 0.5f,
             Width = new StyleDimension(ROOT_W, 0f),
-            Height = new StyleDimension(ROOT_H, 1f),
+            Height = new StyleDimension(-60f, 1f),
             BackgroundColor = C_PanelBg,
             BorderColor = new Color(70, 74, 96)
         };
@@ -107,96 +110,139 @@ public class CharacterSheetUI : UIState
         var player = Main.LocalPlayer;
         var lp = player.GetModPlayer<LooteriaPlayer>();
 
-        // ===== 左：角色立绘 + 力量/套装 + 坐骑/宠物 =====
-        _left = MakePanel(10f, SIDE_W);
-        _root.Append(_left);
+        // ===== 左：防具（上）+ 武器（下）=====
+        _equip = MakePanel(EQUIP_X, EQUIP_W);
+        _root.Append(_equip);
+        {
+            int top = 24; // 首槽标签从面板内 10px 开始
+            AddSlot(_equip, 0, T("SlotHead"), ref top, locked: false);
+            AddSlot(_equip, 1, T("SlotChest"), ref top, locked: false);
+            AddSlot(_equip, 2, T("SlotLegs"), ref top, locked: false);
+            // 武器固定锚在面板底部
+            var wlbl = new UIText(T("SlotHeld"), 0.6f)
+            {
+                Top = new StyleDimension(-82f, 1f),
+                Left = new StyleDimension(8f, 0f),
+                TextColor = C_Dim
+            };
+            _equip.Append(wlbl);
+            var held = new UIItemSlot(-1, player.HeldItem)
+            {
+                Top = new StyleDimension(-64f, 1f),
+                Left = new StyleDimension(14f, 0f)
+            };
+            held.OnHover = ShowHoverItemTooltip;
+            _equip.Append(held);
+        }
+
+        // ===== 中上：人物立绘 =====
+        _portraitPanel = MakePanel(PORTRAIT_X, PORTRAIT_W, height: new StyleDimension(PORTRAIT_H, 0f));
+        _root.Append(_portraitPanel);
 
         _portrait = new PortraitElement
         {
-            HAlign = 0.5f,
-            Top = new StyleDimension(8f, 0f),
-            Width = new StyleDimension(SIDE_W - 20f, 0f),
-            Height = new StyleDimension(180f, 0f)
+            Top = new StyleDimension(6f, 0f),
+            Left = new StyleDimension(6f, 0f),
+            Width = new StyleDimension(-12f, 1f),
+            Height = new StyleDimension(-12f, 1f)
         };
-        _left.Append(_portrait);
+        _portraitPanel.Append(_portrait);
 
-        int leftTop = 196;
-        AddRow(_left, "Stat_GearPower", T("Power") + ": " + lp.GearPower, ref leftTop, C_Accent,
-            Language.GetTextValue("Mods.Looteria.UI.PowerTip", lp.GearPower));
-        leftTop += 4;
-
-        var counts = SetCounts();
-        if (counts.Count == 0)
-            AddRow(_left, "Stat_SetBonus", T("SetNone"), ref leftTop, C_Dim, "");
-        else
-            foreach (var kv in counts)
-            {
-                string themeName = Language.GetTextValue($"Mods.Looteria.Theme.{kv.Key}");
-                AddRow(_left, "Stat_SetBonus", $"{themeName} ×{kv.Value}{(kv.Value >= 2 ? " ✓" : "")}", ref leftTop,
-                    kv.Value >= 2 ? C_Green : C_Dim, "");
-            }
-        leftTop += 4;
-        AddRow(_left, "Stat_SetBonus", T("SetBonusHint"), ref leftTop, C_Dim, "");
-
-        leftTop += 6;
-        AddSection(_left, T("SlotMount"), ref leftTop);
-        var pet = player.miscEquips[0];
-        var mount = player.miscEquips[3];
-        AddRow(_left, "Stat_Life", T("SlotPet") + ": " + (pet.IsAir ? T("Empty") : pet.Name), ref leftTop, pet.IsAir ? C_Dim : Color.White, "");
-        AddRow(_left, "Stat_MoveSpeed", T("SlotMount") + ": " + (mount.IsAir ? T("Empty") : mount.Name), ref leftTop, mount.IsAir ? C_Dim : Color.White, "");
-
-        // ===== 中左：装备 + 武器（纵向）=====
-        _equip = MakePanel(EQUIP_X, EQUIP_W);
-        _root.Append(_equip);
-        int eqTop = 12;
-        AddSlot(_equip, 0, T("SlotHead"), ref eqTop, 0, locked: false);
-        AddSlot(_equip, 1, T("SlotChest"), ref eqTop, 0, locked: false);
-        AddSlot(_equip, 2, T("SlotLegs"), ref eqTop, 0, locked: false);
-        AddSlot(_equip, -1, T("SlotHeld"), ref eqTop, 0, locked: false);
-
-        // ===== 中右：饰品（armor 3-9，未解锁叉+变暗；纵向）=====
-        _acc = MakePanel(ACC_X, ACC_W);
-        _root.Append(_acc);
-        int accTop = 12;
-        for (int s = 3; s <= 9; s++)
+        // ===== 中下：坐骑/宠物（肖像面板正下方，留 8px 间隙）=====
+        _mountPanel = MakePanel(PORTRAIT_X, PORTRAIT_W,
+            top: new StyleDimension(PANEL_TOP + 8f, PORTRAIT_H),
+            height: new StyleDimension(MOUNT_H, 0f));
+        _root.Append(_mountPanel);
         {
-            bool unlocked = player.IsItemSlotUnlockedAndUsable(s);
-            AddSlot(_acc, s, T("SlotAcc"), ref accTop, 0, locked: !unlocked);
+            var hdr = new UIText(T("SlotMount"), 0.8f)
+            {
+                Top = new StyleDimension(6f, 0f), Left = new StyleDimension(8f, 0f), TextColor = C_Accent
+            };
+            _mountPanel.Append(hdr);
+
+            var pet = player.miscEquips[0];
+            var mount = player.miscEquips[3];
+
+            var petSlot = new UIItemSlot(0, pet)
+            {
+                Top = new StyleDimension(30f, 0f), Left = new StyleDimension(10f, 0f)
+            };
+            petSlot.OnHover = ShowHoverItemTooltip;
+            _mountPanel.Append(petSlot);
+            _mountPanel.Append(new UIText(T("SlotPet") + "：" + (pet.IsAir ? T("Empty") : pet.Name), 0.65f)
+            {
+                Top = new StyleDimension(44f, 0f), Left = new StyleDimension(70f, 0f),
+                TextColor = pet.IsAir ? C_Dim : Color.White
+            });
+
+            var mountSlot = new UIItemSlot(3, mount)
+            {
+                Top = new StyleDimension(86f, 0f), Left = new StyleDimension(10f, 0f)
+            };
+            mountSlot.OnHover = ShowHoverItemTooltip;
+            _mountPanel.Append(mountSlot);
+            _mountPanel.Append(new UIText(T("SlotMountItem") + "：" + (mount.IsAir ? T("Empty") : mount.Name), 0.65f)
+            {
+                Top = new StyleDimension(100f, 0f), Left = new StyleDimension(70f, 0f),
+                TextColor = mount.IsAir ? C_Dim : Color.White
+            });
         }
 
-        // ===== 右：属性列表（贴右边缘）=====
-        _right = MakePanel(RIGHT_X, RIGHT_W);
-        _root.Append(_right);
+        // ===== 中右：饰品（armor 3-9，未解锁叉+变暗）=====
+        _acc = MakePanel(ACC_X, ACC_W);
+        _root.Append(_acc);
+        {
+            var hdr = new UIText(T("SlotAcc"), 0.8f)
+            {
+                Top = new StyleDimension(6f, 0f), Left = new StyleDimension(8f, 0f), TextColor = C_Accent
+            };
+            _acc.Append(hdr);
+            int accTop = 30;
+            for (int s = 3; s <= 9; s++)
+            {
+                bool unlocked = player.IsItemSlotUnlockedAndUsable(s);
+                AddSlot(_acc, s, null, ref accTop, locked: !unlocked);
+            }
+        }
+
+        // ===== 右：属性（总览 + 详细，可滚动）=====
+        _stats = MakePanel(STATS_X, STATS_W);
+        _root.Append(_stats);
         BuildStats(player, lp);
     }
 
-    private UIPanel MakePanel(float left, float width) => new()
+    private UIPanel MakePanel(float left, float width,
+        StyleDimension? top = null, StyleDimension? height = null) => new()
     {
-        Top = new StyleDimension(PANEL_TOP, 0f),
+        Top = top ?? new StyleDimension(PANEL_TOP, 0f),
         Left = new StyleDimension(left, 0f),
         Width = new StyleDimension(width, 0f),
-        Height = new StyleDimension(ROOT_H, 1f),
+        Height = height ?? new StyleDimension(-PANEL_TOP - 8f, 1f),
         BackgroundColor = C_SubBg,
         BorderColor = new Color(50, 54, 70)
     };
 
-    /// <summary>单个槽：标签在上，物品格在下；锁定槽变暗+打叉。纵向排（startX 固定）。</summary>
-    private static void AddSlot(UIPanel panel, int slot, string label, ref int top, float startX, bool locked)
+    /// <summary>单个槽：标签（可空）在上，物品格在下；锁定槽=变暗+对角叉。纵向排。</summary>
+    private static void AddSlot(UIPanel panel, int slot, string? label, ref int top, bool locked)
     {
         var player = Main.LocalPlayer;
-        var lbl = new UIText(label, 0.6f)
+        if (label != null)
         {
-            Top = new StyleDimension(top - 14f, 0f),
-            Left = new StyleDimension(startX + 4f, 0f),
-            TextColor = locked ? C_Locked : C_Dim
-        };
-        panel.Append(lbl);
+            var lbl = new UIText(label, 0.6f)
+            {
+                Top = new StyleDimension(top - 14f, 0f),
+                Left = new StyleDimension(10f, 0f),
+                TextColor = locked ? C_Locked : C_Dim
+            };
+            panel.Append(lbl);
+        }
 
-        var item = slot >= 0 && slot < player.armor.Length ? player.armor[slot] : player.HeldItem;
+        var item = locked ? new Item()
+            : (slot >= 0 && slot < player.armor.Length ? player.armor[slot] : player.HeldItem);
         var ui = new UIItemSlot(slot, item)
         {
             Top = new StyleDimension(top, 0f),
-            Left = new StyleDimension(startX + 2f, 0f)
+            Left = new StyleDimension(14f, 0f)
         };
         if (!locked && slot >= 0 && item.TryGetGlobalItem(out AffixGlobalItem ag) && ag.HasAffix)
             ui.RarityHighlight = (int)ag.Rarity;
@@ -204,53 +250,60 @@ public class CharacterSheetUI : UIState
         ui.OnSlotClicked += _ => { };
         if (locked)
         {
-            var dim = ui.GetDimensions();
             ui.OnDrawOverride = sb =>
             {
                 var d = ui.GetDimensions();
                 var px = TextureAssets.MagicPixel.Value;
-                sb.Draw(px, d.ToRectangle(), new Color(20, 22, 34) * 0.8f);
-                var r = d.ToRectangle();
-                int th = 4, cx = r.Center.X, cy = r.Center.Y;
-                // 对角叉
-                sb.Draw(px, new Rectangle(cx - 12, cy - 2, 24, th), C_Locked);
-                sb.Draw(px, new Rectangle(cx - 2, cy - 12, th, 24), C_Locked);
+                sb.Draw(px, d.ToRectangle(), new Color(20, 22, 34) * 0.82f);
+                // 对角叉（45° 两根斜杠）
+                var c = new Vector2(d.X + d.Width * 0.5f, d.Y + d.Height * 0.5f);
+                for (int i = 0; i < 2; i++)
+                {
+                    float ang = MathHelper.PiOver4 + i * MathHelper.PiOver2;
+                    sb.Draw(px, c, null, C_Locked, ang, new Vector2(0.5f), new Vector2(30f, 4f), SpriteEffects.None, 0f);
+                }
             };
         }
         panel.Append(ui);
         top += 56;
     }
 
-    /// <summary>概览/属性行：图标(26px) + 文本，同 top 横向并排（不用 VAlign）。</summary>
-    private static void AddRow(UIPanel panel, string iconKey, string text, ref int top, Color color, string tooltip)
+    /// <summary>属性行（放入滚动列表）：图标 + 名称/值，同 top 横向并排（不用 VAlign）。</summary>
+    private static UIElement StatRow(string iconKey, string text, Color color, string tooltip = "", float h = 22f)
     {
-        AddStat(panel, iconKey, text, "", ref top, color, tooltip);
-    }
-
-    /// <summary>属性行：图标(24px) + 名称 + 值，同 top 横向并排（不用 VAlign）。</summary>
-    private static void AddStat(UIPanel panel, string iconKey, string name, string value, ref int top, Color color, string tooltip = "")
-    {
+        var row = new UIElement { Width = new StyleDimension(488f, 0f), Height = new StyleDimension(h, 0f) };
         var img = new UIImage(StatIcon(iconKey))
         {
-            Top = new StyleDimension(top, 0f),
-            Left = new StyleDimension(6f, 0f),
-            Width = new StyleDimension(24f, 0f),
-            Height = new StyleDimension(24f, 0f)
+            Top = new StyleDimension(0f, 0f),
+            Left = new StyleDimension(2f, 0f),
+            Width = new StyleDimension(20f, 0f),
+            Height = new StyleDimension(20f, 0f)
         };
-        img.ImageScale = 0.7f;
+        img.ImageScale = 0.65f;
         img.AllowResizingDimensions = false;
-        panel.Append(img);
+        row.Append(img);
 
-        var row = new UIText(string.IsNullOrEmpty(value) ? name : $"{name}: {value}", 0.7f)
+        var txt = new UIText(text, 0.68f)
         {
-            Top = new StyleDimension(top + 3f, 0f), // 图标盒 24 + 文字略下移 = 垂直居中
-            Left = new StyleDimension(34f, 0f),
+            Top = new StyleDimension(1f, 0f),
+            Left = new StyleDimension(26f, 0f),
             TextColor = color
         };
-        panel.Append(row);
+        row.Append(txt);
+
         if (tooltip.Length > 0)
             row.OnMouseOver += (_, _) => { Main.LocalPlayer.mouseInterface = true; Main.instance.MouseText(tooltip); };
-        top += 24;
+        return row;
+    }
+
+    private static UIElement SectionRow(string title, float h = 22f)
+    {
+        var row = new UIElement { Width = new StyleDimension(488f, 0f), Height = new StyleDimension(h, 0f) };
+        row.Append(new UIText(title, 0.78f)
+        {
+            Top = new StyleDimension(0f, 0f), Left = new StyleDimension(2f, 0f), TextColor = C_Accent
+        });
+        return row;
     }
 
     /// <summary>统计各套装主题已穿戴件数（真实槽 0..9，与 SetBonusHandler 同口径）。</summary>
@@ -270,55 +323,77 @@ public class CharacterSheetUI : UIState
         return counts;
     }
 
-    /// <summary>右侧属性列表：实时 Player 值（含全部增益/套装/宝石）。</summary>
+    /// <summary>右侧属性列表（可滚动）：总览 + 实时 Player 值（含全部增益/套装/宝石）。</summary>
     private void BuildStats(Player p, LooteriaPlayer lp)
     {
-        int top = 10;
-        AddSection(_right, T("StatSectionCombat"), ref top);
+        var list = new UIList
+        {
+            Top = new StyleDimension(8f, 0f),
+            Left = new StyleDimension(8f, 0f),
+            Width = new StyleDimension(-30f, 1f),
+            Height = new StyleDimension(-18f, 1f)
+        };
+        var scrollbar = new UIScrollbar
+        {
+            Top = new StyleDimension(8f, 0f),
+            Left = new StyleDimension(-22f, 1f),
+            Height = new StyleDimension(-18f, 1f)
+        };
+        scrollbar.SetView(100f, 1000f);
+        list.SetScrollbar(scrollbar);
+        _stats.Append(list);
 
+        // ===== 总览 =====
+        list.Add(SectionRow(T("StatSectionOverview")));
+        list.Add(StatRow("Stat_GearPower",
+            $"{T("Power")}: {lp.GearPower}", C_Accent,
+            Language.GetTextValue("Mods.Looteria.UI.PowerTip", lp.GearPower)));
+        var counts = SetCounts();
+        if (counts.Count == 0)
+        {
+            list.Add(StatRow("Stat_SetBonus", T("SetNone"), C_Dim));
+        }
+        else
+        {
+            foreach (var kv in counts)
+            {
+                string themeName = Language.GetTextValue($"Mods.Looteria.Theme.{kv.Key}");
+                list.Add(StatRow("Stat_SetBonus", $"{themeName} ×{kv.Value}{(kv.Value >= 2 ? " ✓" : "")}",
+                    kv.Value >= 2 ? C_Green : C_Dim));
+            }
+        }
+        list.Add(StatRow("Stat_SetBonus", T("SetBonusHint"), C_Dim));
+
+        // ===== 详细 =====
+        list.Add(SectionRow(T("StatSectionCombat")));
         float dmgBonus = p.GetDamage(DamageClass.Generic).Additive * 100f;
         float critChance = p.GetCritChance(DamageClass.Generic);
-        AddStat(_right, "Stat_Damage", T("StatDamage"), $"+{dmgBonus:0.#}%", ref top, Color.White);
-        AddStat(_right, "Stat_CritChance", T("StatCritChance"), $"{critChance:0.#}%", ref top, C_Orange);
-        AddStat(_right, "Stat_CritDamage", T("StatCritDamage"), $"+{lp.PassiveCritDamage:0.#}%", ref top, C_Orange);
-        AddStat(_right, "Stat_AttackSpeed", T("StatAttackSpeed"), $"+{p.GetAttackSpeed(DamageClass.Generic) * 100f:0.#}%", ref top, C_Green);
+        list.Add(StatRow("Stat_Damage", $"{T("StatDamage")}: +{dmgBonus:0.#}%", Color.White));
+        list.Add(StatRow("Stat_CritChance", $"{T("StatCritChance")}: {critChance:0.#}%", C_Orange));
+        list.Add(StatRow("Stat_CritDamage", $"{T("StatCritDamage")}: +{lp.PassiveCritDamage:0.#}%", C_Orange));
+        list.Add(StatRow("Stat_AttackSpeed", $"{T("StatAttackSpeed")}: +{p.GetAttackSpeed(DamageClass.Generic) * 100f:0.#}%", C_Green));
 
-        top += 4;
-        AddSection(_right, T("StatSectionDefense"), ref top);
+        list.Add(SectionRow(T("StatSectionDefense")));
+        list.Add(StatRow("Stat_Life", $"{T("StatLife")}: {p.statLifeMax2}", Color.White));
+        list.Add(StatRow("Stat_Mana", $"{T("StatMana")}: {p.statManaMax2}", Color.White));
+        list.Add(StatRow("Stat_Defense", $"{T("StatDefense")}: {p.statDefense}", Color.White));
+        list.Add(StatRow("Stat_DamageReduction", $"{T("StatDamageReduction")}: {p.endurance * 100f:0.#}%", C_Green));
+        list.Add(StatRow("Stat_LifeRegen", $"{T("StatLifeRegen")}: {p.lifeRegen / 2f:0.#}/s", C_Green));
+        list.Add(StatRow("Stat_ManaRegen", $"{T("StatManaRegen")}: {p.manaRegenBonus}", C_Cyan));
 
-        AddStat(_right, "Stat_Life", T("StatLife"), $"{p.statLifeMax2}", ref top, Color.White);
-        AddStat(_right, "Stat_Mana", T("StatMana"), $"{p.statManaMax2}", ref top, Color.White);
-        AddStat(_right, "Stat_Defense", T("StatDefense"), $"{p.statDefense}", ref top, Color.White);
-        AddStat(_right, "Stat_DamageReduction", T("StatDamageReduction"), $"{p.endurance * 100f:0.#}%", ref top, C_Green);
-        AddStat(_right, "Stat_LifeRegen", T("StatLifeRegen"), $"{p.lifeRegen / 2f:0.#}/s", ref top, C_Green);
-        AddStat(_right, "Stat_ManaRegen", T("StatManaRegen"), $"{p.manaRegenBonus}", ref top, C_Cyan);
+        list.Add(SectionRow(T("StatSectionMobility")));
+        list.Add(StatRow("Stat_MoveSpeed", $"{T("StatMoveSpeed")}: {p.moveSpeed * 100f:0.#}%", C_Cyan));
 
-        top += 4;
-        AddSection(_right, T("StatSectionMobility"), ref top);
+        list.Add(SectionRow(T("StatSectionOnHit")));
+        list.Add(StatRow("Stat_Life", $"{T("StatLifeOnHit")}: +{lp.PassiveLifeOnHit:0.#}", C_Green));
+        list.Add(StatRow("Stat_Mana", $"{T("StatManaOnHit")}: +{lp.PassiveManaOnHit}", C_Cyan));
 
-        AddStat(_right, "Stat_MoveSpeed", T("StatMoveSpeed"), $"{p.moveSpeed * 100f:0.#}%", ref top, C_Cyan);
-
-        top += 4;
-        AddSection(_right, T("StatSectionOnHit"), ref top);
-
-        AddStat(_right, "Stat_Life", T("StatLifeOnHit"), $"+{lp.PassiveLifeOnHit:0.#}", ref top, C_Green);
-        AddStat(_right, "Stat_Mana", T("StatManaOnHit"), $"+{lp.PassiveManaOnHit}", ref top, C_Cyan);
-
-        top += 4;
-        AddSection(_right, T("StatSectionResist"), ref top);
-
-        AddStat(_right, "Stat_Defense", T("StatBuffResistPoison"), $"{p.buffImmune[BuffID.Poisoned]}", ref top, C_Dim);
-        AddStat(_right, "Stat_Defense", T("StatBuffResistFire"), $"{p.buffImmune[BuffID.OnFire]}", ref top, C_Dim);
-        AddStat(_right, "Stat_Defense", T("StatBuffResistBleed"), $"{p.buffImmune[BuffID.Bleeding]}", ref top, C_Dim);
-        AddStat(_right, "Stat_Defense", T("StatBuffResistCurse"), $"{p.buffImmune[BuffID.CursedInferno]}", ref top, C_Dim);
-        AddStat(_right, "Stat_Defense", T("StatBuffResistSlow"), $"{p.buffImmune[BuffID.Slow]}", ref top, C_Dim);
-    }
-
-    private static void AddSection(UIPanel panel, string title, ref int top)
-    {
-        var t = new UIText(title, 0.8f) { Top = new StyleDimension(top, 0f), Left = new StyleDimension(4f, 0f), TextColor = C_Accent };
-        panel.Append(t);
-        top += 22;
+        list.Add(SectionRow(T("StatSectionResist")));
+        list.Add(StatRow("Stat_Defense", $"{T("StatBuffResistPoison")}: {p.buffImmune[BuffID.Poisoned]}", C_Dim));
+        list.Add(StatRow("Stat_Defense", $"{T("StatBuffResistFire")}: {p.buffImmune[BuffID.OnFire]}", C_Dim));
+        list.Add(StatRow("Stat_Defense", $"{T("StatBuffResistBleed")}: {p.buffImmune[BuffID.Bleeding]}", C_Dim));
+        list.Add(StatRow("Stat_Defense", $"{T("StatBuffResistCurse")}: {p.buffImmune[BuffID.CursedInferno]}", C_Dim));
+        list.Add(StatRow("Stat_Defense", $"{T("StatBuffResistSlow")}: {p.buffImmune[BuffID.Slow]}", C_Dim));
     }
 
     /// <summary>悬停物品悬浮预览（与掠夺面板共用，每帧克隆防击退爆炸）。</summary>
@@ -330,8 +405,10 @@ public class CharacterSheetUI : UIState
     }
 
     /// <summary>
-    /// 角色肖像：真实玩家渲染。DrawPlayer 的 position 是【世界坐标】，
-    /// 世界→屏幕偏移用 Main.Camera.UnscaledPosition。isDisplayDollOrInanimate=true 避免世界光照。
+    /// 角色肖像：真实玩家渲染（配方与原版 UICharacter 一致）。
+    /// DrawPlayer 的 position = 玩家碰撞盒【左上角】的【世界坐标】，
+    /// 层内绘制时再 -Main.screenPosition 回到屏幕坐标，因此 UI 侧传 左上角+screenPosition。
+    /// 缩放锚点=碰撞盒底部中心（feet），所以把碰撞盒底部放到盒子底边，放大时向上长。
     /// </summary>
     private class PortraitElement : UIElement
     {
@@ -342,14 +419,23 @@ public class CharacterSheetUI : UIState
             if (player == null) return;
 
             var d = GetDimensions();
-            bool oldInanimate = player.isDisplayDollOrInanimate;
-            player.isDisplayDollOrInanimate = true;
+            if (d.Width < 10f || d.Height < 10f) return;
+
+            float scale = MathF.Min(d.Width / 44f, d.Height / 52f); // scale1 时人物约 20x44
+            bool oldDoll = player.isDisplayDollOrInanimate;
+            player.isDisplayDollOrInanimate = true; // 全亮 + 无视隐身穿插
+
+            Item? held = null;
+            bool hadItem = !player.inventory[player.selectedItem].IsAir;
             try
             {
-                float scale = d.Width / 48f;
-                var uiPos = new Vector2(d.X + d.Width / 2f, d.Y + d.Height - 4f);
-                var worldPos = uiPos + Main.Camera.UnscaledPosition;
-                Main.PlayerRenderer.DrawPlayer(Main.Camera, player, worldPos, 0f, Vector2.Zero, 0f, scale);
+                if (hadItem) held = player.inventory[player.selectedItem];
+                if (held != null) player.inventory[player.selectedItem] = new Item(); // 空手（不画手持物品）
+
+                var pos = new Vector2(
+                    d.X + d.Width * 0.5f - player.width * 0.5f,
+                    d.Y + d.Height - 8f - player.height);
+                Main.PlayerRenderer.DrawPlayer(Main.Camera, player, pos + Main.screenPosition, 0f, Vector2.Zero, 0f, scale);
             }
             catch (Exception e)
             {
@@ -357,7 +443,8 @@ public class CharacterSheetUI : UIState
             }
             finally
             {
-                player.isDisplayDollOrInanimate = oldInanimate;
+                if (held != null) player.inventory[player.selectedItem] = held;
+                player.isDisplayDollOrInanimate = oldDoll;
             }
         }
     }

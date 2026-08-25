@@ -687,6 +687,7 @@ Mods: {
 			SetBonus6: 6 件：+20% 全伤害、+8% 减伤、+10% 移速
 			LegendaryTag: 传说之力 · {0}
 			CharSheetTitle: 角色属性
+			StatSectionOverview: 总览
 			SlotHead: 头盔
 			SlotChest: 胸甲
 			SlotLegs: 腿甲
