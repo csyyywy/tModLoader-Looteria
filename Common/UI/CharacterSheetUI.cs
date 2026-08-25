@@ -48,7 +48,8 @@ public class CharacterSheetUI : UIState
     {
         if (!_statIcons.TryGetValue(key, out var a))
         {
-            try { a = _statIcons[key] = ModContent.Request<Texture2D>($"Looteria/Content/UI/CharacterSheet/Stat_{key}"); }
+            // key 已是完整资源名（如 "Stat_GearPower"），直接拼路径
+            try { a = _statIcons[key] = ModContent.Request<Texture2D>($"Looteria/Content/UI/CharacterSheet/{key}"); }
             catch { a = _statIcons[key] = ModContent.Request<Texture2D>("Looteria/Content/UI/PowerIcon"); } // 兜底
         }
         return a;
@@ -155,12 +156,12 @@ public class CharacterSheetUI : UIState
         var player = Main.LocalPlayer;
         // 槽位布局：左列 = 头盔/胸甲/腿/鞋(饰品槽3)，右列 = 饰品槽1/2/4/5 + 手持
         // armor 索引：0头 1胸 2腿 3-7饰品 8钩爪 9盾/坐骑；时装 10+
-        BuildEquipColumn(_mid, "Stat_Defense", new (int, string)[]
+        BuildEquipColumn(_mid, new (int, string)[]
         {
             (0, T("SlotHead")), (1, T("SlotChest")), (2, T("SlotLegs")),
             (3, T("SlotAcc")), (4, T("SlotAcc")), (5, T("SlotAcc"))
         }, 0);
-        BuildEquipColumn(_mid, "Stat_Damage", new (int, string)[]
+        BuildEquipColumn(_mid, new (int, string)[]
         {
             (6, T("SlotAcc")), (7, T("SlotAcc")), (8, T("SlotHook")),
             (9, T("SlotShield")), (-1, T("SlotHeld"))
@@ -182,7 +183,7 @@ public class CharacterSheetUI : UIState
     }
 
     /// <summary>装备槽列：在 _mid 内按固定 52px 格子摆放，悬停完整悬浮预览。</summary>
-    private static void BuildEquipColumn(UIPanel panel, string fallbackIcon, (int Slot, string Label)[] slots, float startX)
+    private static void BuildEquipColumn(UIPanel panel, (int Slot, string Label)[] slots, float startX)
     {
         var player = Main.LocalPlayer;
         int y = 12;

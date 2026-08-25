@@ -809,7 +809,9 @@ Mods: {
 				'''
 		}
 
-		Keybinds.LooteriaPanel.DisplayName: 掠夺面板
-		Keybinds.LooteriaCharSheet.DisplayName: 角色属性面板
+		Keybinds: {
+			LooteriaPanel.DisplayName: 掠夺面板
+			LooteriaCharSheet.DisplayName: 角色属性面板
+		}
 	}
 }

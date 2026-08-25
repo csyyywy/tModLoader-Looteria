@@ -809,7 +809,9 @@ Mods: {
 				'''
 		}
 
-		Keybinds.LooteriaPanel.DisplayName: Looteria Panel
-		Keybinds.LooteriaCharSheet.DisplayName: Character Sheet
+		Keybinds: {
+			LooteriaPanel.DisplayName: Looteria Panel
+			LooteriaCharSheet.DisplayName: Character Sheet
+		}
 	}
 }
