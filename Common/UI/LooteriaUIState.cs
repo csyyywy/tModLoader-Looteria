@@ -62,6 +62,7 @@ public partial class LooteriaUIState : UIState
     private AffixRoll? _rerollRoll;           // 重铸演练：单条掷出的新词缀（未确认）
     private List<AffixRoll>? _rerollAllRolls; // 重铸演练：全部掷出的新词缀（未确认）
     private int _consumeAction;               // 0=无；1=升档待选同名装备；2=开槽待选同名装备
+    private int _hoverCoinTooltip;            // 悬停按钮的钱币花销（>0 时在 UI 树绘制完后画悬浮框）
 
     private static string T(string key) => Language.GetTextValue($"Mods.Looteria.UI.{key}");
 
@@ -161,6 +162,38 @@ public partial class LooteriaUIState : UIState
     {
         UISystem.PanelOpen = false;
         Main.gamePaused = false;
+    }
+
+    /// <summary>
+    /// 在整棵 UI 树绘制完之后再画钱币悬浮框——子元素是按顺序绘制的，直接在按钮内画会被
+    /// 排在其后的按钮（下方）盖住；这里最后画保证悬浮框永远在最上层。
+    /// </summary>
+    public override void Draw(SpriteBatch spriteBatch)
+    {
+        base.Draw(spriteBatch);
+        int copper = _hoverCoinTooltip;
+        _hoverCoinTooltip = 0; // 每帧重置，只有当前帧有按钮悬停时才画
+        if (copper <= 0) return;
+
+        var font = FontAssets.MouseText.Value;
+        string costText = T("Cost") + ": ";
+        var sz = font.MeasureString(costText) * 0.8f;
+        var (p, g, s, c) = SplitCoins(copper);
+        int iconCount = (p > 0 ? 1 : 0) + (g > 0 ? 1 : 0) + (s > 0 ? 1 : 0) + (c > 0 ? 1 : 0);
+        float iconW = 24f;
+        float boxW = sz.X + iconCount * (iconW + 4f) + 24f;
+        float boxH = 36f;
+        var mouse = Main.MouseScreen;
+        var rect = new Rectangle((int)mouse.X + 14, (int)mouse.Y + 14, (int)boxW, (int)boxH);
+        // 保持屏幕内
+        if (rect.Right > Main.screenWidth - 8) rect.X = Main.screenWidth - rect.Width - 8;
+        if (rect.Bottom > Main.screenHeight - 8) rect.Y = Main.screenHeight - rect.Height - 8;
+        Utils.DrawInvBG(spriteBatch, rect, new Color(23, 25, 81, 255) * 0.925f);
+        float tx = rect.X + 10f;
+        float ty = rect.Y + (rect.Height - font.MeasureString(costText).Y * 0.8f) / 2f;
+        Utils.DrawBorderStringFourWay(spriteBatch, font, costText, tx, ty, Color.White, Color.Black, Vector2.Zero, 0.8f);
+        tx += sz.X + 2f;
+        DrawCoinIcons(spriteBatch, font, tx, ty - 2f, copper, Color.White, 0.75f);
     }
 
     public void Rebuild()

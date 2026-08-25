@@ -356,30 +356,10 @@ public partial class LooteriaUIState
         public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-            // 悬停：在原版 tooltip 背景框里画"花费 + 钱币图标"（跟随鼠标）
+            // 悬浮框不在按钮内直接画——子元素按顺序绘制，下方按钮会盖住它。
+            // 登记到面板状态，由 LooteriaUIState.Draw 在整棵 UI 树画完后最后绘制（永远最上层）。
             if (IsMouseHovering && Copper > 0)
-            {
-                var font = FontAssets.MouseText.Value;
-                string costText = T("Cost") + ": ";
-                var sz = font.MeasureString(costText) * 0.8f;
-                // 估算图标宽度（铂/金/银/铜 4 档，每档一个图标）
-                var (p, g2, s, c) = SplitCoins(Copper);
-                int iconCount = (p > 0 ? 1 : 0) + (g2 > 0 ? 1 : 0) + (s > 0 ? 1 : 0) + (c > 0 ? 1 : 0);
-                float iconW = 24f;
-                float boxW = sz.X + iconCount * (iconW + 4f) + 24f;
-                float boxH = 36f;
-                var mouse = Main.MouseScreen;
-                var rect = new Rectangle((int)mouse.X + 14, (int)mouse.Y + 14, (int)boxW, (int)boxH);
-                // 保持屏幕内
-                if (rect.Right > Main.screenWidth - 8) rect.X = Main.screenWidth - rect.Width - 8;
-                if (rect.Bottom > Main.screenHeight - 8) rect.Y = Main.screenHeight - rect.Height - 8;
-                Utils.DrawInvBG(spriteBatch, rect, new Color(23, 25, 81, 255) * 0.925f);
-                float tx = rect.X + 10f;
-                float ty = rect.Y + (rect.Height - font.MeasureString(costText).Y * 0.8f) / 2f;
-                Utils.DrawBorderStringFourWay(spriteBatch, font, costText, tx, ty, Color.White, Color.Black, Vector2.Zero, 0.8f);
-                tx += sz.X + 2f;
-                DrawCoinIcons(spriteBatch, font, tx, ty - 2f, Copper, Color.White, 0.75f);
-            }
+                Instance._hoverCoinTooltip = Copper;
         }
     }
 
