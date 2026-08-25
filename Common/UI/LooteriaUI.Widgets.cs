@@ -144,6 +144,29 @@ public partial class LooteriaUIState
     private static string FormatValue(AffixDef def, float v)
         => def.IsPercent ? $"+{v:0}%" : $"+{v:0.#}";
 
+    /// <summary>插槽宝石格式化：每槽一行（"◆ 宝石名 +N"或"◇ 空"）。值编码 = gemId + upgrade×1000。</summary>
+    private static List<string> FormatSocketLines(AffixGlobalItem g)
+    {
+        var list = new List<string>();
+        if (g == null || g.SocketCount <= 0) return list;
+        for (int i = 0; i < g.SocketCount; i++)
+        {
+            int sockVal = (g.Sockets != null && i < g.Sockets.Count) ? g.Sockets[i] : 0;
+            if (sockVal > 0)
+            {
+                int gemId = sockVal % 1000;
+                int gemUp = sockVal / 1000;
+                list.Add("◆ " + Language.GetTextValue(GemDatabase.Key(gemId))
+                       + (gemUp > 0 ? $" +{gemUp}" : ""));
+            }
+            else
+            {
+                list.Add("◇ " + T("Empty"));
+            }
+        }
+        return list;
+    }
+
     /// <summary>钱币文案：铜币 → 金/银/铜。</summary>
     private static string CoinText(int copper)
     {

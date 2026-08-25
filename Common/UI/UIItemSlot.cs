@@ -22,8 +22,6 @@ public class UIItemSlot : UIElement
     public int SlotIndex;
     public Item Item = new();
     public bool Selected;
-    /// <summary>L9：悬停 tooltip 用的克隆（每帧 Clone 含词缀列表深拷贝 → GC 压力），进入悬停克隆一次、离开置空。</summary>
-    private Item? _hoverClone;
 
     /// <summary>有词缀时高亮稀有度色（无则 -1）。</summary>
     public int RarityHighlight = -1;
@@ -49,20 +47,19 @@ public class UIItemSlot : UIElement
         base.DrawSelf(spriteBatch);
         var dims = GetDimensions();
 
-        // 悬停：显示物品完整属性（像物品栏一样，含本模组词缀 tooltip）
+        // 悬停：显示物品完整属性（像物品栏一样，含本模组词缀 tooltip）。
+        // ⚠️ 必须【每帧 Clone】一个新实例给 Main.HoverItem：tML 的 MouseText_DrawItemTooltip
+        // （Main.cs.patch:16095）会对 HoverItem.knockBack 做【原地乘法】（潜行加成 ×1.5），
+        // 如果复用同一个克隆，每帧乘一次 → 击退指数爆炸（"面板里击退无限上升"根因）。
+        // 原版就是这么做的（每帧克隆背包物品进 HoverItem），不能做 L9 的"克隆一次复用"优化。
         if (IsMouseHovering)
         {
             Main.LocalPlayer.mouseInterface = true;
             if (Item != null && !Item.IsAir)
             {
-                if (_hoverClone == null) _hoverClone = Item.Clone(); // L9：克隆一次并复用
-                Main.HoverItem = _hoverClone;
+                Main.HoverItem = Item.Clone(); // 每帧干净克隆（tML 会原地改它）
                 Main.instance.MouseText("");
             }
-        }
-        else
-        {
-            _hoverClone = null; // L9：离开悬停释放
         }
 
         // 背景（防御：贴图缺失画纯色框）

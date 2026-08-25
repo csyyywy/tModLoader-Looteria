@@ -46,6 +46,16 @@ public partial class LooteriaUIState
             AddLabel(_content, "  " + line, ref top, 0.8f, new Color(255, 200, 0));
             top += 20;
         }
+        // 插槽宝石详情（每个槽位一行：◆ 宝石名 +N / ◇ 空）
+        if (g.SocketCount > 0)
+        {
+            top += 4;
+            foreach (var line in FormatSocketLines(g))
+            {
+                AddLabel(_content, "  " + line, ref top, 0.8f, Color.DeepSkyBlue);
+                top += 20;
+            }
+        }
         AddButton(_content, T("Salvage"), ref top, () =>
         {
             if (BlockLocalCurrencyOp()) return; // R2：多人禁用本地拆解（尘是服务端权威）
@@ -203,11 +213,11 @@ public partial class LooteriaUIState
         // M4：先校验后扣款（尘+钱币）；不足则什么都不动，材料保留
         int pay = TryPay(player, UpgradeCost, coins);
         if (pay != 0) { Rebuild(); ShowMsg(pay == 1 ? T("NotEnoughDust") : T("NotEnoughCoins")); return; }
-        // 升档（成功/失败都消耗材料——博彩税：尘/钱已扣，材料在成功时消耗，失败时保留？）
-        // 设计取舍：材料仅在成功时消耗（失败重试成本 = 尘+钱，不再白丢装备）；失败重掷需要新材料。
+        // 升档：材料（同名装备）无论成功/失败都消耗——博彩税（尘+钱+材料全扣，失败重试需重新准备材料）。
+        // 先销毁材料再掷点：即使掷点抛异常材料也不会凭空多出来。
+        if (matSlot >= 0 && matSlot < player.inventory.Length)
+            player.inventory[matSlot].TurnToAir();
         bool ok = AffixRoller.UpgradeRarity(item, g);
-        if (ok && matSlot >= 0 && matSlot < player.inventory.Length)
-            player.inventory[matSlot].TurnToAir(); // M4：成功才消耗同名装备
         Rebuild();
         ShowMsg(ok ? T("UpgradeOk") : T("UpgradeFail"));
     }

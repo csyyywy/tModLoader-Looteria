@@ -31,12 +31,26 @@ public static class TooltipBuilder
             }
         }
 
-        // 插槽
+        // 插槽（逐个显示：◆ 宝石名 +N 强化 或 ◇ 空槽）
         if (g.SocketCount > 0)
         {
             string s = "";
             for (int i = 0; i < g.SocketCount; i++)
-                s += (g.Sockets != null && i < g.Sockets.Count && g.Sockets[i] > 0) ? "◆" : "◇";
+            {
+                int sockVal = (g.Sockets != null && i < g.Sockets.Count) ? g.Sockets[i] : 0;
+                if (sockVal > 0)
+                {
+                    int gemId = sockVal % 1000;
+                    int gemUp = sockVal / 1000;
+                    s += "◆ " + Language.GetTextValue(GemDatabase.Key(gemId))
+                       + (gemUp > 0 ? $" +{gemUp}" : "");
+                }
+                else
+                {
+                    s += "◇";
+                }
+                if (i < g.SocketCount - 1) s += "\n";
+            }
             tooltips.Add(new TooltipLine(mod, "LooteriaSockets",
                 Language.GetTextValue("Mods.Looteria.UI.Sockets", s)) { OverrideColor = Color.DeepSkyBlue });
         }
