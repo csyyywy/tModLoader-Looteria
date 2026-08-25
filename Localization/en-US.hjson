@@ -558,6 +558,7 @@ Mods: {
 			RerolledAll: Rerolled all!
 			SameItem: same-name item ×1
 			PickMatItem: Pick an item to consume
+			CoinPlatinum: p
 			CoinGold: g
 			CoinSilver: s
 			CoinCopper: c

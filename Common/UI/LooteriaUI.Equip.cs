@@ -41,6 +41,7 @@ public partial class LooteriaUIState
             return;
         }
         AddSectionTitle(_content, $"{item.Name} · {T("Power")} {g.PowerScore}", RarityInfo.Colors[Math.Clamp((int)g.Rarity, 0, RarityInfo.Count - 1)], ref top); // M14
+        AddCoinLabel(_content, $"{T("Value")}: ", item.value, ref top, 0.8f, Color.LightGray); // 原版钱币图标
         foreach (var line in FormatAffixLines(g))
         {
             AddLabel(_content, "  " + line, ref top, 0.8f, new Color(255, 200, 0));
@@ -93,8 +94,8 @@ public partial class LooteriaUIState
             return;
         }
 
-        AddSectionTitle(_content, $"{item.Name} · {T("Power")} {g.PowerScore} · {T("Value")} {CoinText(item.value)}",
-            RarityInfo.Colors[Math.Clamp((int)g.Rarity, 0, RarityInfo.Count - 1)], ref top); // M14
+        AddSectionTitle(_content, $"{item.Name} · {T("Power")} {g.PowerScore}", RarityInfo.Colors[Math.Clamp((int)g.Rarity, 0, RarityInfo.Count - 1)], ref top); // M14
+        AddCoinLabel(_content, $"{T("Value")}: ", item.value, ref top, 0.8f, Color.LightGray); // 原版钱币图标（含铂金）
 
         // 词缀列表：每条右侧一个"重铸"按钮（点击即扣款，进入演练，未确认不生效）
         AddSectionTitle(_content, T("RerollAffixes"), C_Cyan, ref top);
@@ -114,7 +115,7 @@ public partial class LooteriaUIState
             b.OnLeftClick += (_, _) =>
             {
                 if (BlockLocalCurrencyOp()) return; // R2：多人禁用重铸（尘扣费是本地改）
-                int coins = Math.Max(1, item.value / 10);
+                int coins = CoinCost(item.value, 10); // 花销 ÷50：原 value/10 → value/500
                 int pay = TryPay(player, RerollOneCost, coins);
                 if (pay != 0) { Rebuild(); ShowMsg(pay == 1 ? T("NotEnoughDust") : T("NotEnoughCoins")); return; } // 演练即扣款
                 _rerollIdx = idx;
@@ -171,11 +172,11 @@ public partial class LooteriaUIState
         }
         else
         {
-            int allCoins = Math.Max(1, item.value / 20);
-            AddButton(_content, $"{T("RerollAll")} ({RerollAllCost}{T("Dust")} + {CoinText(allCoins)})", ref top, () =>
+            int allCoins = CoinCost(item.value, 20); // 花销 ÷50：原 value/20 → value/1000
+            AddCoinButton(_content, $"{T("RerollAll")} ({RerollAllCost}{T("Dust")} + ", allCoins, ref top, () =>
             {
                 if (BlockLocalCurrencyOp()) return; // R2
-                int coins = Math.Max(1, item.value / 20);
+                int coins = CoinCost(item.value, 20);
                 int pay = TryPay(player, RerollAllCost, coins);
                 if (pay != 0) { Rebuild(); ShowMsg(pay == 1 ? T("NotEnoughDust") : T("NotEnoughCoins")); return; } // 演练即扣款
                 _rerollAllRolls = AffixRoller.PreviewRerollAll(item, g);
@@ -185,11 +186,11 @@ public partial class LooteriaUIState
             }, new Color(60, 90, 150));
         }
 
-        // 升档：120 尘 + 价值/10 钱 + 1 件同名装备（自选消耗）
+        // 升档：120 尘 + 价值/500 钱 + 1 件同名装备（自选消耗）
         if (g.Rarity < LootRarity.Set)
         {
-            int upCoins = Math.Max(1, item.value / 10);
-            AddButton(_content, $"{T("Upgrade")} ({UpgradeCost}{T("Dust")} + {CoinText(upCoins)} + {T("SameItem")})", ref top,
+            int upCoins = CoinCost(item.value, 10);
+            AddCoinButton(_content, $"{T("Upgrade")} ({UpgradeCost}{T("Dust")} + {T("SameItem")}) + ", upCoins, ref top,
                 () => { if (BlockLocalCurrencyOp()) return; _consumeAction = _consumeAction == 1 ? 0 : 1; _rerollIdx = -1; _rerollRoll = null; _rerollAllRolls = null; Rebuild(); }, // R2
                 new Color(90, 70, 130));
             if (_consumeAction == 1)
@@ -209,7 +210,7 @@ public partial class LooteriaUIState
 
     private void DoUpgrade(Player player, Item item, AffixGlobalItem g, int matSlot)
     {
-        int coins = Math.Max(1, item.value / 10);
+        int coins = CoinCost(item.value, 10); // 花销 ÷50：原 value/10 → value/500
         // M4：先校验后扣款（尘+钱币）；不足则什么都不动，材料保留
         int pay = TryPay(player, UpgradeCost, coins);
         if (pay != 0) { Rebuild(); ShowMsg(pay == 1 ? T("NotEnoughDust") : T("NotEnoughCoins")); return; }

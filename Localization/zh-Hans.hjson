@@ -558,6 +558,7 @@ Mods: {
 			RerolledAll: 全部重铸完成！
 			SameItem: 同名装备×1
 			PickMatItem: 选择要消耗的同名装备
+			CoinPlatinum: 铂
 			CoinGold: 金
 			CoinSilver: 银
 			CoinCopper: 铜

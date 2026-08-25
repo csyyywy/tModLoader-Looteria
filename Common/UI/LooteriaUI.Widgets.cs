@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using ReLogic.Graphics;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
+using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader.UI;
 using Terraria.UI;
@@ -167,16 +170,150 @@ public partial class LooteriaUIState
         return list;
     }
 
-    /// <summary>钱币文案：铜币 → 金/银/铜。</summary>
+    /// <summary>钱币文案（含铂金；纯文本兜底，UI 优先用图标版 UICoinLine/UICoinButton）。</summary>
     private static string CoinText(int copper)
     {
         if (copper <= 0) return "0";
-        int g = copper / 10000, s = (copper % 10000) / 100, c = copper % 100;
+        var (p, g, s, c) = SplitCoins(copper);
         string r = "";
+        if (p > 0) r += $"{p}{T("CoinPlatinum")}";
         if (g > 0) r += $"{g}{T("CoinGold")}";
         if (s > 0) r += $"{s}{T("CoinSilver")}";
         if (c > 0 || r.Length == 0) r += $"{c}{T("CoinCopper")}";
         return r;
+    }
+
+    /// <summary>把铜币数拆成 铂/金/银/铜 四档（值 = 100 进制，1铂=100金=10000银=1000000铜）。
+    /// ⚠️ 单位换算恒为 100 进制，与"花销除以 50"的调价互不相干——别把两者混为一谈。</summary>
+    private static (int P, int G, int S, int C) SplitCoins(int copper)
+    {
+        int p = copper / 1000000; copper %= 1000000;
+        int g = copper / 10000; copper %= 10000;
+        int s = copper / 100; int c = copper % 100;
+        return (p, g, s, c);
+    }
+
+    /// <summary>所有钱币花销统一除以 50（用户调价）：原价 = value / divide（10 或 20），现价 = value / (divide*50)，最低 1 铜。</summary>
+    private static int CoinCost(int value, int divide) => Math.Max(1, value / (divide * 50));
+
+    /// <summary>在 sb 上连续绘制 "数量 + 原版钱币图标"（铂/金/银/铜），返回结束 X。替代汉字单位。</summary>
+    private static float DrawCoinIcons(SpriteBatch sb, DynamicSpriteFont font, float x, float y, int copper, Color textColor, float scale = 0.8f)
+    {
+        var (p, g, s, c) = SplitCoins(copper);
+        int[] counts = { p, g, s, c };
+        int[] itemTypes = { ItemID.PlatinumCoin, ItemID.GoldCoin, ItemID.SilverCoin, ItemID.CopperCoin };
+        for (int i = 0; i < 4; i++)
+        {
+            if (counts[i] <= 0) continue;
+            string num = counts[i].ToString();
+            var sz = font.MeasureString(num) * scale;
+            Utils.DrawBorderStringFourWay(sb, font, num, x, y, textColor, Color.Black, Vector2.Zero, scale);
+            x += sz.X + 2f;
+            // 原版钱币物品图标
+            try
+            {
+                Main.instance.LoadItem(itemTypes[i]);
+                var tex = TextureAssets.Item[itemTypes[i]].Value;
+                float iconH = 16f * scale;
+                float iconW = tex.Width * (iconH / tex.Height);
+                sb.Draw(tex, new Rectangle((int)x, (int)(y - 2f), (int)iconW, (int)iconH), Color.White);
+                x += iconW + 4f;
+            }
+            catch { x += 12f; } // 贴图缺失：留空继续
+        }
+        return x;
+    }
+
+    /// <summary>文字行 + 原版钱币图标（铂/金/银/铜）。替代 "12金34银" 的汉字写法。</summary>
+    private class UICoinLine : UIElement
+    {
+        public string Prefix = "";
+        public int Copper;
+        public Color TextColor = Color.White;
+        public float Scale = 0.8f;
+
+        public UICoinLine(string prefix, int copper, Color color, float scale = 0.8f)
+        {
+            Prefix = prefix; Copper = copper; TextColor = color; Scale = scale;
+            Width = new StyleDimension(600f, 0f);
+            Height = new StyleDimension(24f, 0f);
+        }
+
+        protected override void DrawSelf(SpriteBatch sb)
+        {
+            base.DrawSelf(sb);
+            var d = GetDimensions();
+            var font = FontAssets.MouseText.Value;
+            float x = d.X;
+            float y = d.Y + 4f;
+            if (Prefix.Length > 0)
+            {
+                Utils.DrawBorderStringFourWay(sb, font, Prefix, x, y, TextColor, Color.Black, Vector2.Zero, Scale);
+                x += font.MeasureString(Prefix).X * Scale + 2f;
+            }
+            DrawCoinIcons(sb, font, x, y, Copper, TextColor, Scale);
+        }
+    }
+
+    /// <summary>带原版钱币图标的行标签（前缀 + 钱币），自动换行高度推进。替代 AddLabel + CoinText。</summary>
+    private static void AddCoinLabel(UIPanel panel, string prefix, int copper, ref int top, float scale, Color color)
+    {
+        panel.Append(new UICoinLine(prefix, copper, color, scale)
+        {
+            Top = new StyleDimension(top, 0f),
+            Left = new StyleDimension(8f, 0f)
+        });
+        top += (int)(26f * scale) + 6;
+    }
+
+    /// <summary>带原版钱币图标的按钮（自绘：底色 + 标签文字 + 钱币图标 + 悬停高亮）。</summary>
+    private class UICoinButton : UIElement
+    {
+        public string Label = "";
+        public int Copper;
+        public Color TextColor = Color.White;
+        public Color BgColor = new(60, 90, 150);
+        public float Scale = 0.75f;
+
+        public UICoinButton(string label, int copper, Color bg, Action onClick, float scale = 0.75f)
+        {
+            Label = label; Copper = copper; BgColor = bg; Scale = scale;
+            Width = new StyleDimension(300f, 0f);
+            Height = new StyleDimension(30f, 0f);
+            OnLeftClick += (_, _) => onClick();
+        }
+
+        protected override void DrawSelf(SpriteBatch sb)
+        {
+            base.DrawSelf(sb);
+            var d = GetDimensions();
+            var r = d.ToRectangle();
+            var bg = IsMouseHovering ? Color.Lerp(BgColor, Color.White, 0.15f) : BgColor;
+            var px = TextureAssets.MagicPixel.Value;
+            sb.Draw(px, r, bg);
+            sb.Draw(px, new Rectangle(r.X, r.Y, r.Width, 1), Color.White * 0.4f);
+            sb.Draw(px, new Rectangle(r.X, r.Bottom - 1, r.Width, 1), Color.Black * 0.4f);
+            var font = FontAssets.MouseText.Value;
+            float x = d.X + 8f;
+            float y = d.Y + 6f;
+            if (Label.Length > 0)
+            {
+                Utils.DrawBorderStringFourWay(sb, font, Label, x, y, TextColor, Color.Black, Vector2.Zero, Scale);
+                x += font.MeasureString(Label).X * Scale + 4f;
+            }
+            DrawCoinIcons(sb, font, x, y, Copper, Color.White, Scale);
+        }
+    }
+
+    /// <summary>带原版钱币图标的按钮（替代 AddButton + CoinText 汉字）。</summary>
+    private static void AddCoinButton(UIPanel panel, string label, int copper, ref int top, Action onClick, Color? bg = null)
+    {
+        panel.Append(new UICoinButton(label, copper, bg ?? new Color(60, 90, 150), onClick)
+        {
+            Top = new StyleDimension(top, 0f),
+            Left = new StyleDimension(8f, 0f)
+        });
+        top += 36;
     }
 
     /// <summary>强调色分隔线。</summary>
