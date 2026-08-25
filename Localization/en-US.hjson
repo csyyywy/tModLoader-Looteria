@@ -691,9 +691,10 @@ Mods: {
 			SlotChest: Chestplate
 			SlotLegs: Leggings
 			SlotAcc: Accessory
-			SlotHook: Hook
-			SlotShield: Shield/Mount
 			SlotHeld: Held
+			SlotMount: Mount & Pet
+			SlotPet: Pet
+			SlotMountItem: Mount
 			SetNone: No set worn
 			SetBonusHint: Same-theme 2/4/6 pieces trigger set bonuses
 			PowerTip: Gear Power = 10×tier + Σ(affix value×weight) + socket/legendary/set bonuses. Gear Power of all 7 equipped slots = Rift requirement.

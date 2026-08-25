@@ -19,9 +19,10 @@ namespace Looteria.Common.UI;
 
 /// <summary>
 /// 角色属性面板（刷宝游戏样式）：
-/// - 左：角色肖像（占位图 CharPortrait.png）+ 力量/套装概览
-/// - 中：两侧装备槽（护甲+饰品+手持），悬停悬浮预览完整 tooltip
-/// - 右：详细属性列表（图标 + 名称 + 实时值，含来源 tooltip）
+/// - 左：真实玩家渲染（PlayerRenderer）+ 力量/套装概览 + 坐骑/宠物
+/// - 中左：装备+武器槽（头盔/胸甲/腿甲/手持）
+/// - 中右：饰品槽（armor 3-9，未解锁打叉变暗）
+/// - 右：详细属性列表（图标 + 名称 + 值，垂直对齐）
 /// 按键 C 打开（UISystem.CharSheetKeybind）；单机暂停。
 /// </summary>
 public class CharacterSheetUI : UIState
@@ -35,10 +36,12 @@ public class CharacterSheetUI : UIState
     private static readonly Color C_Dim = new(150, 155, 170);
     private static readonly Color C_PanelBg = new(26, 28, 42);
     private static readonly Color C_SubBg = new(20, 22, 34);
+    private static readonly Color C_Locked = new(60, 62, 78);
 
     private UIPanel _root = null!;
     private UIPanel _left = null!;
-    private UIPanel _mid = null!;
+    private UIPanel _equip = null!;
+    private UIPanel _acc = null!;
     private UIPanel _right = null!;
     private PortraitElement _portrait = null!;
 
@@ -48,9 +51,8 @@ public class CharacterSheetUI : UIState
     {
         if (!_statIcons.TryGetValue(key, out var a))
         {
-            // key 已是完整资源名（如 "Stat_GearPower"），直接拼路径
             try { a = _statIcons[key] = ModContent.Request<Texture2D>($"Looteria/Content/UI/CharacterSheet/{key}"); }
-            catch { a = _statIcons[key] = ModContent.Request<Texture2D>("Looteria/Content/UI/PowerIcon"); } // 兜底
+            catch { a = _statIcons[key] = ModContent.Request<Texture2D>("Looteria/Content/UI/PowerIcon"); }
         }
         return a;
     }
@@ -76,7 +78,7 @@ public class CharacterSheetUI : UIState
         _root = new UIPanel
         {
             HAlign = 0.5f, VAlign = 0.5f,
-            Width = new StyleDimension(1000f, 0f),
+            Width = new StyleDimension(1080f, 0f),
             Height = new StyleDimension(-60f, 1f),
             BackgroundColor = C_PanelBg,
             BorderColor = new Color(70, 74, 96)
@@ -89,90 +91,108 @@ public class CharacterSheetUI : UIState
         if (_root == null) return;
         _root.RemoveAllChildren();
 
-        // 标题
         var title = new UIText(T("CharSheetTitle"), 1.15f) { HAlign = 0.5f, Top = new StyleDimension(6f, 0f), TextColor = C_Accent };
         _root.Append(title);
 
-        // ===== 左：角色肖像 + 概览 =====
+        var player = Main.LocalPlayer;
+        var lp = player.GetModPlayer<LooteriaPlayer>();
+
+        // ===== 左：角色 + 概览 + 坐骑/宠物 =====
         _left = new UIPanel
         {
             Top = new StyleDimension(44f, 0f),
             Left = new StyleDimension(10f, 0f),
-            Width = new StyleDimension(240f, 0f),
+            Width = new StyleDimension(230f, 0f),
             Height = new StyleDimension(-58f, 1f),
             BackgroundColor = C_SubBg,
             BorderColor = new Color(50, 54, 70)
         };
         _root.Append(_left);
 
-        // 肖像：真实玩家渲染（PlayerRenderer.DrawPlayer），占位图已废弃
+        // 真实玩家渲染（全身）
         _portrait = new PortraitElement
         {
             HAlign = 0.5f,
-            Top = new StyleDimension(12f, 0f),
-            Width = new StyleDimension(140f, 0f),
-            Height = new StyleDimension(140f, 0f)
+            Top = new StyleDimension(8f, 0f),
+            Width = new StyleDimension(150f, 0f),
+            Height = new StyleDimension(170f, 0f)
         };
         _left.Append(_portrait);
 
-        var lp = Main.LocalPlayer.GetModPlayer<LooteriaPlayer>();
-        int top = 150;
+        int top = 182;
 
-        // 力量
+        // 力量（图标与文字垂直居中对齐）
         AddRow(_left, "Stat_GearPower", T("Power") + ": " + lp.GearPower, ref top, C_Accent,
             Language.GetTextValue("Mods.Looteria.UI.PowerTip", lp.GearPower));
-        top += 6;
+        top += 4;
 
-        // 套装概览（各主题已穿戴件数）
+        // 套装概览
         var counts = SetCounts();
         if (counts.Count == 0)
-        {
             AddRow(_left, "Stat_SetBonus", T("SetNone"), ref top, C_Dim, "");
-        }
         else
-        {
             foreach (var kv in counts)
             {
                 string themeName = Language.GetTextValue($"Mods.Looteria.Theme.{kv.Key}");
-                string active = kv.Value >= 2 ? "✓" : "";
-                AddRow(_left, "Stat_SetBonus", $"{themeName} ×{kv.Value} {active}", ref top, kv.Value >= 2 ? C_Green : C_Dim, "");
+                AddRow(_left, "Stat_SetBonus", $"{themeName} ×{kv.Value}{(kv.Value >= 2 ? " ✓" : "")}", ref top,
+                    kv.Value >= 2 ? C_Green : C_Dim, "");
             }
-        }
-        top += 8;
+        top += 4;
         AddRow(_left, "Stat_SetBonus", T("SetBonusHint"), ref top, C_Dim, "");
 
-        // ===== 中：装备槽（护甲 + 饰品 + 手持）=====
-        _mid = new UIPanel
+        // 坐骑/宠物（角色最下方，miscEquips: 0=宠物 3=坐骑）
+        top += 6;
+        AddSection(_left, T("SlotMount"), ref top);
+        var pet = player.miscEquips[0];
+        var mount = player.miscEquips[3];
+        AddRow(_left, "Stat_Life", T("SlotPet") + ": " + (pet.IsAir ? T("Empty") : pet.Name), ref top, pet.IsAir ? C_Dim : Color.White, "");
+        AddRow(_left, "Stat_MoveSpeed", T("SlotMount") + ": " + (mount.IsAir ? T("Empty") : mount.Name), ref top, mount.IsAir ? C_Dim : Color.White, "");
+
+        // ===== 中左：装备 + 武器 =====
+        _equip = new UIPanel
         {
             Top = new StyleDimension(44f, 0f),
-            Left = new StyleDimension(258f, 0f),
-            Width = new StyleDimension(300f, 0f),
+            Left = new StyleDimension(248f, 0f),
+            Width = new StyleDimension(120f, 0f),
             Height = new StyleDimension(-58f, 1f),
             BackgroundColor = C_SubBg,
             BorderColor = new Color(50, 54, 70)
         };
-        _root.Append(_mid);
+        _root.Append(_equip);
 
-        var player = Main.LocalPlayer;
-        // 槽位布局：左列 = 头盔/胸甲/腿/鞋(饰品槽3)，右列 = 饰品槽1/2/4/5 + 手持
-        // armor 索引：0头 1胸 2腿 3-7饰品 8钩爪 9盾/坐骑；时装 10+
-        BuildEquipColumn(_mid, new (int, string)[]
+        BuildEquipColumn(_equip, new (int, string)[]
         {
             (0, T("SlotHead")), (1, T("SlotChest")), (2, T("SlotLegs")),
-            (3, T("SlotAcc")), (4, T("SlotAcc")), (5, T("SlotAcc"))
-        }, 0);
-        BuildEquipColumn(_mid, new (int, string)[]
-        {
-            (6, T("SlotAcc")), (7, T("SlotAcc")), (8, T("SlotHook")),
-            (9, T("SlotShield")), (-1, T("SlotHeld"))
-        }, 150);
+        }, 0, isArmor: true);
+        // 手持放底部
+        int heldTop = 12 + 3 * 58;
+        AddSlot(_equip, -1, T("SlotHeld"), ref heldTop, 0, locked: false);
 
-        // ===== 右：属性列表 =====
+        // ===== 中右：饰品（armor 3-9，未解锁叉+变暗）=====
+        _acc = new UIPanel
+        {
+            Top = new StyleDimension(44f, 0f),
+            Left = new StyleDimension(376f, 0f),
+            Width = new StyleDimension(120f, 0f),
+            Height = new StyleDimension(-58f, 1f),
+            BackgroundColor = C_SubBg,
+            BorderColor = new Color(50, 54, 70)
+        };
+        _root.Append(_acc);
+
+        int accTop = 12;
+        for (int s = 3; s <= 9; s++)
+        {
+            bool unlocked = player.IsItemSlotUnlockedAndUsable(s);
+            AddSlot(_acc, s, T("SlotAcc"), ref accTop, s - 3, locked: !unlocked);
+        }
+
+        // ===== 右：属性列表（贴右边缘）=====
         _right = new UIPanel
         {
             Top = new StyleDimension(44f, 0f),
-            Left = new StyleDimension(566f, 0f),
-            Width = new StyleDimension(-576f, 1f),
+            Left = new StyleDimension(-10f, 1f),
+            Width = new StyleDimension(560f, 0f),
             Height = new StyleDimension(-58f, 1f),
             BackgroundColor = C_SubBg,
             BorderColor = new Color(50, 54, 70)
@@ -182,55 +202,72 @@ public class CharacterSheetUI : UIState
         BuildStats(player, lp);
     }
 
-    /// <summary>装备槽列：在 _mid 内按固定 52px 格子摆放，悬停完整悬浮预览。</summary>
-    private static void BuildEquipColumn(UIPanel panel, (int Slot, string Label)[] slots, float startX)
+    /// <summary>装备槽列（固定 52px 格子），标签在格子上方。</summary>
+    private static void BuildEquipColumn(UIPanel panel, (int Slot, string Label)[] slots, float startX, bool isArmor)
     {
-        var player = Main.LocalPlayer;
         int y = 12;
         foreach (var (slot, label) in slots)
-        {
-            // 标签
-            var lbl = new UIText(label, 0.6f)
-            {
-                Top = new StyleDimension(y - 14f, 0f),
-                Left = new StyleDimension(startX + 2f, 0f),
-                TextColor = C_Dim
-            };
-            panel.Append(lbl);
-
-            // 槽
-            var item = slot >= 0 && slot < player.armor.Length ? player.armor[slot] : player.HeldItem;
-            var ui = new UIItemSlot(slot, item)
-            {
-                Top = new StyleDimension(y, 0f),
-                Left = new StyleDimension(startX, 0f)
-            };
-            if (slot >= 0 && item.TryGetGlobalItem(out AffixGlobalItem ag) && ag.HasAffix)
-                ui.RarityHighlight = (int)ag.Rarity;
-            ui.OnHover = ShowHoverItemTooltip;
-            ui.OnSlotClicked += _ => { }; // 仅预览，不交互
-            panel.Append(ui);
-            y += 58;
-        }
+            AddSlot(panel, slot, label, ref y, startX, locked: false);
     }
 
-    /// <summary>角色肖像旁/概览的图标+文本行（tooltip 悬停显示）。</summary>
+    /// <summary>单个槽：标签 + 物品格；锁定槽打叉变暗。</summary>
+    private static void AddSlot(UIPanel panel, int slot, string label, ref int top, float startX, bool locked)
+    {
+        var player = Main.LocalPlayer;
+        var lbl = new UIText(label, 0.6f)
+        {
+            Top = new StyleDimension(top - 15f, 0f),
+            Left = new StyleDimension(startX + 2f, 0f),
+            TextColor = locked ? C_Locked : C_Dim
+        };
+        panel.Append(lbl);
+
+        var item = slot >= 0 && slot < player.armor.Length ? player.armor[slot] : player.HeldItem;
+        var ui = new UIItemSlot(slot, item)
+        {
+            Top = new StyleDimension(top, 0f),
+            Left = new StyleDimension(startX, 0f)
+        };
+        if (!locked && slot >= 0 && item.TryGetGlobalItem(out AffixGlobalItem ag) && ag.HasAffix)
+            ui.RarityHighlight = (int)ag.Rarity;
+        ui.OnHover = ShowHoverItemTooltip;
+        ui.OnSlotClicked += _ => { };
+        // 锁定槽：变暗 + 打叉
+        if (locked)
+            ui.OnDrawOverride = sb =>
+            {
+                var d = ui.GetDimensions();
+                var px = TextureAssets.MagicPixel.Value;
+                sb.Draw(px, d.ToRectangle(), new Color(20, 22, 34) * 0.75f); // 变暗
+                // 叉
+                var r = d.ToRectangle();
+                sb.Draw(px, new Rectangle(r.X + 8, r.Y + 24, r.Width - 16, 3), C_Locked);
+                sb.Draw(px, new Rectangle(r.X + 8, r.Y + 24, 3, r.Height - 48), C_Locked);
+                sb.Draw(px, new Rectangle(r.X + r.Width - 11, r.Y + 24, 3, r.Height - 48), C_Locked);
+                sb.Draw(px, new Rectangle(r.X + 8, r.Y + r.Height - 27, r.Width - 16, 3), C_Locked);
+            };
+        panel.Append(ui);
+        top += 58;
+    }
+
+    /// <summary>角色肖像旁/概览的图标+文本行（图标与文字垂直居中对齐）。</summary>
     private static void AddRow(UIPanel panel, string iconKey, string text, ref int top, Color color, string tooltip)
     {
         var img = new UIImage(StatIcon(iconKey))
         {
-            Top = new StyleDimension(top - 2f, 0f),
+            Top = new StyleDimension(top, 0f),
             Left = new StyleDimension(8f, 0f),
-            Width = new StyleDimension(24f, 0f),
-            Height = new StyleDimension(24f, 0f)
+            Width = new StyleDimension(26f, 0f),
+            Height = new StyleDimension(26f, 0f),
+            VAlign = 0.5f
         };
-        img.ImageScale = 0.75f;
+        img.ImageScale = 0.8f;
         panel.Append(img);
 
         var t = new UIText(text, 0.75f)
         {
             Top = new StyleDimension(top, 0f),
-            Left = new StyleDimension(38f, 0f),
+            Left = new StyleDimension(40f, 0f),
             TextColor = color
         };
         panel.Append(t);
@@ -239,15 +276,16 @@ public class CharacterSheetUI : UIState
         top += 26;
     }
 
-    /// <summary>属性行：图标 + 名称 + 值 + 悬停来源说明。</summary>
+    /// <summary>属性行：图标 + 名称 + 值，图标与文本垂直居中对齐。</summary>
     private static void AddStat(UIPanel panel, string iconKey, string name, string value, ref int top, Color color, string tooltip = "")
     {
         var img = new UIImage(StatIcon(iconKey))
         {
-            Top = new StyleDimension(top - 2f, 0f),
+            Top = new StyleDimension(top, 0f),
             Left = new StyleDimension(6f, 0f),
             Width = new StyleDimension(24f, 0f),
-            Height = new StyleDimension(24f, 0f)
+            Height = new StyleDimension(24f, 0f),
+            VAlign = 0.5f
         };
         img.ImageScale = 0.75f;
         panel.Append(img);
@@ -287,7 +325,6 @@ public class CharacterSheetUI : UIState
         int top = 8;
         AddSection(_right, T("StatSectionCombat"), ref top);
 
-        // 伤害：总伤害加成（含职业），按通用显示
         float dmgBonus = p.GetDamage(DamageClass.Generic).Additive * 100f;
         float critChance = p.GetCritChance(DamageClass.Generic);
         AddStat(_right, "Stat_Damage", T("StatDamage"), $"+{dmgBonus:0.#}%", ref top, Color.White);
@@ -342,10 +379,9 @@ public class CharacterSheetUI : UIState
     }
 
     /// <summary>
-    /// 角色肖像：直接用游戏内玩家形象渲染（Main.PlayerRenderer.DrawPlayer）。
-    /// 文档明确支持 UI 内绘制：设 isDisplayDollOrInanimate=true 避免世界光照影响。
-    /// DrawPlayer 的 position 是【世界坐标】脚底锚点（Main.Camera 带世界变换），
-    /// 因此把 UI 坐标 + Main.screenPosition 转成世界坐标；scale 放大到格子宽。
+    /// 角色肖像：真实玩家渲染。DrawPlayer 的 position 是【世界坐标】，
+    /// 世界→屏幕偏移用 Main.Camera.UnscaledPosition（比 screenPosition 可靠，UI 模式同样有效）。
+    /// isDisplayDollOrInanimate=true 避免世界光照。
     /// </summary>
     private class PortraitElement : UIElement
     {
@@ -360,10 +396,9 @@ public class CharacterSheetUI : UIState
             player.isDisplayDollOrInanimate = true;
             try
             {
-                // 玩家脚底在格子底部中央；世界坐标 = UI 坐标 + 屏幕位置
                 float scale = d.Width / 48f;
-                var uiPos = new Vector2(d.X + d.Width / 2f, d.Y + d.Height - 6f);
-                var worldPos = uiPos + Main.screenPosition;
+                var uiPos = new Vector2(d.X + d.Width / 2f, d.Y + d.Height - 4f);
+                var worldPos = uiPos + Main.Camera.UnscaledPosition;
                 Main.PlayerRenderer.DrawPlayer(Main.Camera, player, worldPos, 0f, Vector2.Zero, 0f, scale);
             }
             catch (Exception e)

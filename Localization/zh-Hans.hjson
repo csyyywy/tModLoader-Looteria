@@ -691,9 +691,10 @@ Mods: {
 			SlotChest: 胸甲
 			SlotLegs: 腿甲
 			SlotAcc: 饰品
-			SlotHook: 钩爪
-			SlotShield: 盾牌/坐骑
 			SlotHeld: 手持
+			SlotMount: 坐骑与宠物
+			SlotPet: 宠物
+			SlotMountItem: 坐骑
 			SetNone: 未穿戴套装
 			SetBonusHint: 同主题 2/4/6 件触发套装加成
 			PowerTip: 掠夺之力 = 10×档位 + Σ(词缀值×权重) + 插槽/传说/套装加成。合计 7 件装备的力量 = 掠夺之力，用于秘境门槛。

@@ -42,6 +42,9 @@ public class UIItemSlot : UIElement
     /// <summary>点击回调（构造里接线到 OnLeftClick）。</summary>
     public Action<UIItemSlot>? OnSlotClicked;
 
+    /// <summary>若非空，在 DrawSelf 末尾额外绘制（锁定槽打叉/变暗用）。</summary>
+    public Action<SpriteBatch>? OnDrawOverride;
+
     /// <summary>
     /// 悬停展示回调（可空）。为空时用默认行为：直接往 Main.HoverItem 塞克隆物品（原版 tooltip）。
     /// 面板需要展示"力量: 数值"这类补充行时，可传自定义实现。
@@ -131,6 +134,9 @@ public class UIItemSlot : UIElement
                 dims.Y + dims.Height - 12f,
                 Color.White, Color.Black, Vector2.Zero);
         }
+
+        // 外部附加绘制（锁定槽打叉/变暗）
+        OnDrawOverride?.Invoke(spriteBatch);
     }
 
     private static void DrawBorder(SpriteBatch sb, Rectangle r, Color color)
