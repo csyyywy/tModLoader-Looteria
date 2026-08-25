@@ -64,15 +64,6 @@ public partial class LooteriaUIState : UIState
     private int _consumeAction;               // 0=无；1=升档待选同名装备；2=开槽待选同名装备
     private int _hoverCoinTooltip;            // 悬停按钮的钱币花销（>0 时在 UI 树绘制完后画悬浮框）
 
-    // —— 单机强制暂停（面板打开期间）——
-    // 原版 CanPauseGame() 只在「InGameUI 当前状态 ∈ {图鉴/成就/modConfig}」或「autoPause 且开背包/箱子/签名/对话」时暂停；
-    // 我们的全屏面板不在该白名单 → 世界继续跑（怪会打玩家）。方案：面板打开期间（仅单机）
-    // 临时开 autoPause + playerInventory（全屏 UI 下背包不可见，仅用于命中原版暂停判定），
-    // 并在 Draw 阶段持续强制（防其它代码清除），关闭面板时恢复原值。
-    private bool _prevAutoPause;
-    private bool _prevPlayerInventory;
-    private bool _forcedPause;
-
     private static string T(string key) => Language.GetTextValue($"Mods.Looteria.UI.{key}");
 
     /// <summary>R11：服务端操作回执的客户端反馈（GambleService.ApplyOpResult 调用）。</summary>
@@ -162,35 +153,17 @@ public partial class LooteriaUIState : UIState
     public override void OnActivate()
     {
         UISystem.PanelOpen = true;
-        // 单机强制暂停：原版 CanPauseGame() 只在「InGameUI 白名单状态」或「autoPause && 开背包/箱子/签名/对话」时暂停世界。
-        // 我们的全屏面板不在白名单 → 世界继续跑（怪物会打玩家）。命中 autoPause 分支即可让世界完全暂停。
-        if (Main.netMode == Terraria.ID.NetmodeID.SinglePlayer)
-        {
-            _prevAutoPause = Main.autoPause;
-            _prevPlayerInventory = Main.playerInventory;
-            Main.autoPause = true;
-            Main.playerInventory = true; // 全屏 UI 下背包不可见，仅用于命中原版暂停判定
-            _forcedPause = true;
-        }
+        // 暂停行为遵循原版：开「自动暂停」设置时，打开本全屏面板同样会暂停世界（CanPauseGame 的
+        // autoPause 分支命中；面板本身不在内置白名单，但不影响自动暂停生效）。多人不受影响。
+        if (Main.netMode != Terraria.ID.NetmodeID.MultiplayerClient)
+            Main.gamePaused = true;
         Rebuild();
     }
 
     public override void OnDeactivate()
     {
-        RestorePause();
         UISystem.PanelOpen = false;
         Main.gamePaused = false;
-    }
-
-    /// <summary>恢复原版 autoPause/playerInventory（面板关闭或非单机时）。</summary>
-    private void RestorePause()
-    {
-        if (_forcedPause)
-        {
-            Main.autoPause = _prevAutoPause;
-            Main.playerInventory = _prevPlayerInventory;
-            _forcedPause = false;
-        }
     }
 
     /// <summary>
@@ -200,12 +173,6 @@ public partial class LooteriaUIState : UIState
     public override void Draw(SpriteBatch spriteBatch)
     {
         base.Draw(spriteBatch);
-        // 持续强制暂停（单机面板打开期间）：防其它代码/每帧重算清除 autoPause/playerInventory
-        if (Main.netMode == Terraria.ID.NetmodeID.SinglePlayer && UISystem.PanelOpen && _forcedPause)
-        {
-            Main.autoPause = true;
-            Main.playerInventory = true;
-        }
         int copper = _hoverCoinTooltip;
         _hoverCoinTooltip = 0; // 每帧重置，只有当前帧有按钮悬停时才画
         if (copper <= 0) return;
