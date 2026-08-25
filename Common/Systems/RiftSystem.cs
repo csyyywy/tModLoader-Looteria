@@ -723,6 +723,15 @@ public class RiftSystem : ModSystem
         return lnLife * lnAtkDef;
     }
 
+    /// <summary>调试（/loot enemy）：查询指定 NPC 类型的缓存强度分；不在缓存（被过滤/越界）返回 null。</summary>
+    public static (int Life, int Damage, int Defense, bool Boss, double Power)? QueryEnemyPower(int type)
+    {
+        EnsureCache();
+        var e = _npcCache!.FirstOrDefault(x => x.Type == type);
+        if (e.Type == 0) return null;
+        return (e.LifeMax, e.Damage, e.Defense, e.Boss, EnemyPower(e.LifeMax, e.Damage, e.Defense));
+    }
+
     /// <summary>自适应首层上限（= 缓存中第 15 弱非 Boss 怪的强度分；首层池更大、含弱怪）。</summary>
     private static double _capBase = -1;
 

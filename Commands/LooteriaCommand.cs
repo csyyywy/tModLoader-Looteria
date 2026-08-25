@@ -16,7 +16,7 @@ public class LooteriaCommand : ModCommand
 {
     public override CommandType Type => CommandType.Chat;
     public override string Command => "loot";
-    public override string Usage => "/loot info | tier | riftinfo | roll <none|magic|rare|legendary|set|0-4> | clear | salvage | shards <n> | dust <n>";
+    public override string Usage => "/loot info | tier | riftinfo | enemy <名称/ID> | roll <none|magic|rare|legendary|set|0-4> | clear | salvage | shards <n> | dust <n>";
     public override string Description => "Looteria 查询命令（写操作请用 /lootadmin）";
 
     public override void Action(CommandCaller caller, string input, string[] args)
@@ -43,6 +43,9 @@ public class LooteriaCommand : ModCommand
             case "tier":
                 caller.Reply($"tier = {ItemClassifier.GetTier(player.HeldItem)}, cat = {ItemClassifier.GetCategory(player.HeldItem)}, eligible = {ItemClassifier.IsEligible(player.HeldItem)}");
                 break;
+            case "enemy":
+                EnemyPower(caller, args);
+                break;
             case "riftinfo":
             {
                 string dump = global::Looteria.Common.Systems.RiftSystem.DebugDump();
@@ -57,6 +60,43 @@ public class LooteriaCommand : ModCommand
                 caller.Reply(Usage);
                 break;
         }
+    }
+
+    /// <summary>只读查询：/loot enemy &lt;名称/ID&gt; —— 该敌人缓存强度分（秘境池口径）。</summary>
+    private static void EnemyPower(CommandCaller caller, string[] args)
+    {
+        if (args.Length < 2) { caller.Reply("usage: /loot enemy <名称或ID>"); return; }
+        int type = 0;
+        if (int.TryParse(args[1], out int id))
+        {
+            type = id;
+        }
+        else
+        {
+            // 按显示名模糊查找（原版 + 模组 NPC）
+            string target = string.Join(" ", args.Skip(1)).ToLowerInvariant();
+            for (int i = 1; i < NPCLoader.NPCCount; i++)
+            {
+                try
+                {
+                    string name = Terraria.Lang.GetNPCNameValue(i).ToLowerInvariant();
+                    if (name.Contains(target)) { type = i; break; }
+                }
+                catch { }
+            }
+            if (type == 0)
+            {
+                caller.Reply($"未找到 NPC：{string.Join(" ", args.Skip(1))}（可用 ID 或部分名称）");
+                return;
+            }
+        }
+        var r = global::Looteria.Common.Systems.RiftSystem.QueryEnemyPower(type);
+        if (r == null)
+        {
+            caller.Reply($"type {type} 不在秘境缓存（被过滤或越界）：{Terraria.Lang.GetNPCNameValue(type)}");
+            return;
+        }
+        caller.Reply($"type {type}: {Terraria.Lang.GetNPCNameValue(type)} life={r.Value.Life} dmg={r.Value.Damage} def={r.Value.Defense} boss={r.Value.Boss} power={r.Value.Power:0.##}");
     }
 
     private static void Info(CommandCaller caller, Item item)
@@ -83,7 +123,7 @@ public class LooteriaAdminCommand : ModCommand
 {
     public override CommandType Type => CommandType.Chat | CommandType.Console;
     public override string Command => "lootadmin";
-    public override string Usage => "/lootadmin roll <none|magic|rare|legendary|set|0-4> | clear | salvage | shards <n> | dust <n>";
+    public override string Usage => "/lootadmin roll <none|magic|rare|legendary|set|0-4> | clear | salvage | shards <n> | dust <n> | gem [类型 等级] | spawn <NPC名/ID> [数量] | debug pool|eaf|power";
     public override string Description => "Looteria 写操作命令（单机聊天 / 服务器控制台）";
 
     public override void Action(CommandCaller caller, string input, string[] args)
@@ -124,6 +164,15 @@ public class LooteriaAdminCommand : ModCommand
             case "重铸之尘":
                 SetDust(caller, player, args);
                 break;
+            case "gem":
+                Gem(caller, player, args);
+                break;
+            case "spawn":
+                Spawn(caller, player, args);
+                break;
+            case "debug":
+                Debug(caller, player, args);
+                break;
             default:
                 caller.Reply(Usage);
                 break;
@@ -141,6 +190,168 @@ public class LooteriaAdminCommand : ModCommand
         lp.BloodShards = s;
         SyncCurrency(player, lp);
         caller.Reply($"BloodShards = {s}");
+    }
+
+    /// <summary>调试：/lootadmin gem [类型 等级] —— 给手持装备插一颗宝石。
+    /// 类型 ruby/sapphire/emerald/amethyst/topaz/diamond 或 0-5；等级 0-3（缺省按进度随机）。</summary>
+    private static void Gem(CommandCaller caller, Player player, string[] args)
+    {
+        var held = player.HeldItem;
+        if (held == null || held.IsAir) { caller.Reply("no item in hand"); return; }
+        if (!held.TryGetGlobalItem(out AffixGlobalItem g) || g.Rarity == LootRarity.None)
+        {
+            caller.Reply("held item has no affix instance (roll a rarity first)");
+            return;
+        }
+
+        int gemId = 0;
+        if (args.Length >= 3)
+        {
+            GemType type;
+            switch (args[1].ToLowerInvariant())
+            {
+                case "ruby": case "红": type = GemType.Ruby; break;
+                case "sapphire": case "蓝": type = GemType.Sapphire; break;
+                case "emerald": case "绿": type = GemType.Emerald; break;
+                case "amethyst": case "紫": type = GemType.Amethyst; break;
+                case "topaz": case "黄": type = GemType.Topaz; break;
+                case "diamond": case "钻": type = GemType.Diamond; break;
+                default:
+                    if (int.TryParse(args[1], out int ti) && ti >= 0 && ti < GemDatabase.Types)
+                        type = (GemType)ti;
+                    else { caller.Reply("bad gem type: ruby/sapphire/emerald/amethyst/topaz/diamond or 0-5"); return; }
+                    break;
+            }
+            if (args.Length >= 4 && int.TryParse(args[3], out int lv) && lv >= 0 && lv < GemDatabase.Levels)
+                gemId = GemDatabase.Id(type, lv);
+            else
+                gemId = GemDatabase.Id(type, Main.rand.Next(GemDatabase.Levels));
+        }
+        else
+        {
+            gemId = GemDatabase.RollGemIdForProgression(); // 无参：按进度随机
+        }
+
+        if (g.SocketCount <= 0 || g.Sockets == null)
+        {
+            caller.Reply("no sockets (roll legendary/set for sockets, or open slots)");
+            return;
+        }
+        int slot = g.Sockets.IndexOf(0);
+        if (slot < 0) { caller.Reply("no free socket"); return; }
+        g.Sockets[slot] = gemId; // 插槽值 = gemId + upgrade×1000（0 强化）
+        g.PowerScore = AffixRoller.PowerScore(g);
+        caller.Reply($"inserted gem {gemId} ({GemDatabase.GetType(gemId)} L{GemDatabase.GetLevel(gemId)}) into {held.Name} slot {slot}");
+    }
+
+    /// <summary>调试：/lootadmin spawn &lt;NPC名/ID&gt; [数量] —— 在玩家位置刷怪（测敌人词缀/秘境怪）。</summary>
+    private static void Spawn(CommandCaller caller, Player player, string[] args)
+    {
+        if (args.Length < 2) { caller.Reply("usage: /lootadmin spawn <NPC名或ID> [数量]"); return; }
+        int type = 0;
+        if (int.TryParse(args[1], out int id))
+        {
+            type = id;
+        }
+        else
+        {
+            string target = string.Join(" ", args.Skip(1)).ToLowerInvariant();
+            for (int i = 1; i < NPCLoader.NPCCount; i++)
+            {
+                try
+                {
+                    string name = Terraria.Lang.GetNPCNameValue(i).ToLowerInvariant();
+                    if (name.Contains(target)) { type = i; break; }
+                }
+                catch { }
+            }
+            if (type == 0) { caller.Reply($"未找到 NPC：{string.Join(" ", args.Skip(1))}"); return; }
+        }
+        if (type <= 0 || type >= NPCLoader.NPCCount)
+        {
+            caller.Reply($"bad NPC type: {type}");
+            return;
+        }
+        int count = args.Length >= 3 && int.TryParse(args[2], out int c) ? Math.Clamp(c, 1, 50) : 1;
+        int spawned = 0;
+        for (int i = 0; i < count; i++)
+        {
+            int n = NPC.NewNPC(player.GetSource_FromThis(), (int)player.Center.X + Main.rand.Next(-20, 21),
+                (int)player.Center.Y - 20, type);
+            if (n >= 0 && n < Main.npc.Length) spawned++;
+        }
+        caller.Reply($"spawned {spawned}/{count} × {Terraria.Lang.GetNPCNameValue(type)}");
+    }
+
+    /// <summary>调试：/lootadmin debug pool [稀有度] | eaf | power。</summary>
+    private static void Debug(CommandCaller caller, Player player, string[] args)
+    {
+        if (args.Length < 2) { caller.Reply("usage: /lootadmin debug pool [rarity] | eaf | power"); return; }
+        switch (args[1].ToLowerInvariant())
+        {
+            case "pool":
+            {
+                var held = player.HeldItem;
+                if (held == null || held.IsAir) { caller.Reply("no item in hand"); return; }
+                var cat = ItemClassifier.GetCategory(held);
+                var pool = AffixDatabase.GetPool(cat);
+                if (pool.Count == 0) { caller.Reply("empty pool for this item"); return; }
+                // 完整写日志，聊天给数量 + 前几条
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine($"AffixPool for {held.Name} (cat={cat}, {pool.Count} entries):");
+                foreach (var d in pool)
+                    sb.AppendLine($"  [{d.Id}] {d.Key} stat={d.Stat} base={d.Base} step={d.Step} max={d.Max} pct={d.IsPercent} w={d.Weight}");
+                global::Looteria.Looteria.Instance?.Logger.Info("DebugPool:\n" + sb);
+                caller.Reply($"pool={pool.Count} 条已写入日志（搜 DebugPool）。前 5 条：");
+                for (int i = 0; i < Math.Min(5, pool.Count); i++)
+                    caller.Reply($"  [{pool[i].Id}] {pool[i].Key} stat={pool[i].Stat} max={pool[i].Max}");
+                break;
+            }
+            case "eaf":
+            {
+                // 敌人词缀表（调试：看池子/枚举）
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("EnemyAffixDatabase dump:");
+                sb.AppendLine("CommonPool:");
+                foreach (var a in EnemyAffixDatabase.CommonPool)
+                    sb.AppendLine($"  {(int)a} {EnemyAffixDatabase.Key(a)}");
+                sb.AppendLine("ChampionPool:");
+                foreach (var a in EnemyAffixDatabase.ChampionPool)
+                    sb.AppendLine($"  {(int)a} {EnemyAffixDatabase.Key(a)}");
+                sb.AppendLine("BossExclusivePool:");
+                foreach (var a in EnemyAffixDatabase.BossExclusivePool)
+                    sb.AppendLine($"  {(int)a} {EnemyAffixDatabase.Key(a)}");
+                global::Looteria.Looteria.Instance?.Logger.Info("DebugEAF:\n" + sb);
+                caller.Reply($"敌人词缀表已写入日志（搜 DebugEAF）：common={EnemyAffixDatabase.CommonPool.Length} champ={EnemyAffixDatabase.ChampionPool.Length} boss={EnemyAffixDatabase.BossExclusivePool.Length}");
+                break;
+            }
+            case "power":
+            {
+                var held = player.HeldItem;
+                if (held == null || held.IsAir) { caller.Reply("no item in hand"); return; }
+                if (!held.TryGetGlobalItem(out AffixGlobalItem g))
+                {
+                    caller.Reply("no affix instance");
+                    return;
+                }
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine($"PowerBreakdown for {held.Name}: rarity={g.Rarity} tier={g.Tier} power={g.PowerScore}");
+                if (g.Affixes != null)
+                    foreach (var r in g.Affixes)
+                    {
+                        var d = AffixDatabase.GetById(r.AffixId);
+                        if (d != null)
+                            sb.AppendLine($"  [{d.Key}] value={r.Value:0.#} × weight={d.PowerWeight} = {r.Value * d.PowerWeight:0.#}");
+                    }
+                sb.AppendLine($"  sockets={g.SocketCount} ×15 = {15 * g.SocketCount} | legendary={g.LegendaryPowerId > 0} +30 | set={g.SetThemeId >= 0} +20 | tierBase=10×{g.Tier}={10 * g.Tier}");
+                global::Looteria.Looteria.Instance?.Logger.Info("DebugPower:\n" + sb);
+                caller.Reply($"力量构成已写入日志（搜 DebugPower）：power={g.PowerScore}, affixes={g.Affixes?.Count ?? 0}, sockets={g.SocketCount}");
+                break;
+            }
+            default:
+                caller.Reply("usage: /lootadmin debug pool [rarity] | eaf | power");
+                break;
+        }
     }
 
     private static void SetDust(CommandCaller caller, Player player, string[] args)

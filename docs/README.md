@@ -28,11 +28,17 @@
 | `P` | 开/关掠夺面板（单机暂停；含「说明」页 = 游戏内查看全部玩法文档） |
 | `/loot info` | 查看手持物品词缀详情（稀有度/tier/力量/插槽/传说之力/套装） |
 | `/loot tier` | 查看手持物品 tier、类别、是否可打宝 |
+| `/loot enemy <名称/ID>` | 查询敌人强度分（秘境池口径：生命/伤害/防御/强度分） |
 | `/loot riftinfo` | 秘境诊断：层上限/刷怪池/关底 Boss（完整信息写日志，聊天给摘要） |
 | `/lootadmin roll <稀有度>` | 给手持物品掷稀有度（none/magic/rare/legendary/set 或 0-4） |
 | `/lootadmin clear` | 清除手持物品词缀 |
 | `/lootadmin salvage` | 拆解手持词缀装备 → 重铸之尘（力量÷拆解除数，默认 2） |
 | `/lootadmin shards <n>` / `/lootadmin 血岩 <n>` | 设置血岩（测试） |
 | `/lootadmin dust <n>` / `/lootadmin 重铸之尘 <n>` | 设置重铸之尘（测试） |
+| `/lootadmin gem [类型 等级]` | 给手持装备插一颗宝石（类型 ruby/sapphire/emerald/amethyst/topaz/diamond 或 0-5；等级 0-3；缺省按进度随机） |
+| `/lootadmin spawn <NPC名/ID> [数量]` | 在玩家位置刷怪（调试敌人词缀/秘境怪；数量 1-50） |
+| `/lootadmin debug pool` | 打印手持物品的词缀池（完整写日志，聊天给摘要） |
+| `/lootadmin debug eaf` | 打印敌人词缀表（普通/精英/Boss 池，写日志） |
+| `/lootadmin debug power` | 打印手持装备的力量构成（逐词缀贡献/插槽/传说/套装分解，写日志） |
 
-> **写操作权限**：`/lootadmin` 系列仅**服务器控制台 / 单机聊天**可用；多人聊天里任何玩家敲写操作都会被拒绝（防作弊，H3）。只读命令 `/loot info|tier|riftinfo` 任意玩家可用。
+> **写操作权限**：`/lootadmin` 系列仅**服务器控制台 / 单机聊天**可用；多人聊天里任何玩家敲写操作都会被拒绝（防作弊，H3）。只读命令 `/loot info|tier|enemy|riftinfo` 任意玩家可用。
