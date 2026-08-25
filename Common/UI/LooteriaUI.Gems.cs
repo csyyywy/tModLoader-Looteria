@@ -127,7 +127,7 @@ public partial class LooteriaUIState
             // 当前钱币（你身上+银行全部）；消耗已写进下方开槽按钮内
             long wallet = PlayerCoins(player);
             AddCoinLabel(_content, $"{T("WalletCurrent")}: ", (int)Math.Min(wallet, int.MaxValue), ref top, 0.8f, Color.LightGray);
-            AddCoinButton(_content, $"{T("SocketAdd")} ({g.OpenedSockets}/{MaxOpenedSockets} · {sockDust}{T("Dust")} + {T("SameItem")}) + ",
+            AddCoinButton(_content, $"{T("SocketAdd")} ({g.OpenedSockets}/{MaxOpenedSockets} · {sockDust}{T("Dust")} + {T("SameItem")})",
                 sockCoins, ref top, () => { if (BlockLocalCurrencyOp()) return; _consumeAction = _consumeAction == 2 ? 0 : 2; Rebuild(); }, new Color(90, 70, 130)); // R2
             if (_consumeAction == 2)
             {
@@ -258,7 +258,7 @@ public partial class LooteriaUIState
         long wallet = PlayerCoins(player);
         AddCoinLabel(_content, $"{T("WalletCurrent")}: ", (int)Math.Min(wallet, int.MaxValue), ref top, 0.8f, Color.LightGray);
 
-        AddCoinButton(_content, $"{T("GemUpgrade")} ({cost} {vName} + ", coins, ref top,
+        AddCoinButton(_content, $"{T("GemUpgrade")} ({cost} {vName})", coins, ref top,
             () => { if (BlockLocalCurrencyOp()) return; UpgradeGem(player, lp, selGem, _selectedGemItemSlot); }, new Color(70, 90, 150)); // R2
         _gemMsg = AddLabel(_content, "", ref top, 0.8f, Color.OrangeRed);
     }

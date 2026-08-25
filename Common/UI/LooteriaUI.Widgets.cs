@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using ReLogic.Graphics;
 using Terraria;
+using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
@@ -295,47 +296,94 @@ public partial class LooteriaUIState
         top += (int)(26f * scale) + 6;
     }
 
-    /// <summary>带原版钱币图标的按钮（自绘：底色 + 标签文字 + 钱币图标 + 悬停高亮）。
-    /// 钱币花销直接显示在按钮内（当前/消耗/剩余 摘要行已按用户要求移除，按钮内即消耗）。</summary>
-    private class UICoinButton : UIElement
+    /// <summary>
+    /// 原版圆角样式钱币按钮：继承 UIPanel → 自带原版 PanelBackground/PanelBorder 九宫格圆角贴图；
+    /// 鼠标悬停显示"花费 [原版钱币图标]"悬浮框（原版 tooltip 背景框 + 铂/金/银/铜图标，随装备价值实时变化）。
+    /// </summary>
+    private class UICoinButton : UIPanel
     {
         public string Label = "";
         public int Copper;
         public Color TextColor = Color.White;
-        public Color BgColor = new(60, 90, 150);
         public float Scale = 0.75f;
+
+        private readonly Color _baseBg;
+        private readonly Color _baseBorder;
 
         public UICoinButton(string label, int copper, Color bg, Action onClick, float scale = 0.75f)
         {
-            Label = label; Copper = copper; BgColor = bg; Scale = scale;
+            Label = label; Copper = copper; Scale = scale;
+            _baseBg = bg;
+            _baseBorder = new Color(70, 74, 96);
+            BackgroundColor = _baseBg;
+            BorderColor = _baseBorder;
             Width = new StyleDimension(480f, 0f);
-            Height = new StyleDimension(34f, 0f);
+            Height = new StyleDimension(36f, 0f);
+            SetPadding(6f);
             OnLeftClick += (_, _) => onClick();
+            // 原版悬停反馈：亮背景 + 亮边框（与 tML 其它按钮一致）
+            OnMouseOver += (_, _) =>
+            {
+                SoundEngine.PlaySound(SoundID.MenuTick);
+                BackgroundColor = Color.Lerp(_baseBg, Color.White, 0.18f);
+                BorderColor = Color.Lerp(_baseBorder, Color.White, 0.3f);
+            };
+            OnMouseOut += (_, _) =>
+            {
+                BackgroundColor = _baseBg;
+                BorderColor = _baseBorder;
+            };
         }
+
+        /// <summary>更新钱币花销（悬停悬浮框内容跟随变化）。</summary>
+        public void SetCost(int copper) => Copper = copper;
 
         protected override void DrawSelf(SpriteBatch sb)
         {
+            // 原版圆角九宫格（UIPanel.DrawSelf 用 PanelBackground/PanelBorder 贴图，随 BackgroundColor/BorderColor 上色）
             base.DrawSelf(sb);
+
             var d = GetDimensions();
-            var r = d.ToRectangle();
-            var bg = IsMouseHovering ? Color.Lerp(BgColor, Color.White, 0.15f) : BgColor;
-            var px = TextureAssets.MagicPixel.Value;
-            sb.Draw(px, r, bg);
-            sb.Draw(px, new Rectangle(r.X, r.Y, r.Width, 1), Color.White * 0.4f);
-            sb.Draw(px, new Rectangle(r.X, r.Bottom - 1, r.Width, 1), Color.Black * 0.4f);
             var font = FontAssets.MouseText.Value;
-            float x = d.X + 8f;
-            float y = d.Y + 6f;
+            float x = d.X + 10f;
+            float y = d.Y + Math.Max(2f, (d.Height - font.MeasureString(Label).Y * Scale) / 2f);
             if (Label.Length > 0)
             {
                 Utils.DrawBorderStringFourWay(sb, font, Label, x, y, TextColor, Color.Black, Vector2.Zero, Scale);
-                x += font.MeasureString(Label).X * Scale + 4f;
             }
-            DrawCoinIcons(sb, font, x, y, Copper, Color.White, Scale);
+        }
+
+        public override void Draw(SpriteBatch spriteBatch)
+        {
+            base.Draw(spriteBatch);
+            // 悬停：在原版 tooltip 背景框里画"花费 + 钱币图标"（跟随鼠标）
+            if (IsMouseHovering && Copper > 0)
+            {
+                var font = FontAssets.MouseText.Value;
+                string costText = T("Cost") + ": ";
+                var sz = font.MeasureString(costText) * 0.8f;
+                // 估算图标宽度（铂/金/银/铜 4 档，每档一个图标）
+                var (p, g2, s, c) = SplitCoins(Copper);
+                int iconCount = (p > 0 ? 1 : 0) + (g2 > 0 ? 1 : 0) + (s > 0 ? 1 : 0) + (c > 0 ? 1 : 0);
+                float iconW = 24f;
+                float boxW = sz.X + iconCount * (iconW + 4f) + 24f;
+                float boxH = 36f;
+                var mouse = Main.MouseScreen;
+                var rect = new Rectangle((int)mouse.X + 14, (int)mouse.Y + 14, (int)boxW, (int)boxH);
+                // 保持屏幕内
+                if (rect.Right > Main.screenWidth - 8) rect.X = Main.screenWidth - rect.Width - 8;
+                if (rect.Bottom > Main.screenHeight - 8) rect.Y = Main.screenHeight - rect.Height - 8;
+                Utils.DrawInvBG(spriteBatch, rect, new Color(23, 25, 81, 255) * 0.925f);
+                float tx = rect.X + 10f;
+                float ty = rect.Y + (rect.Height - font.MeasureString(costText).Y * 0.8f) / 2f;
+                Utils.DrawBorderStringFourWay(spriteBatch, font, costText, tx, ty, Color.White, Color.Black, Vector2.Zero, 0.8f);
+                tx += sz.X + 2f;
+                DrawCoinIcons(spriteBatch, font, tx, ty - 2f, Copper, Color.White, 0.75f);
+            }
         }
     }
 
-    /// <summary>带原版钱币图标的按钮（替代 AddButton + CoinText 汉字）。</summary>
+    /// <summary>带原版圆角样式 + 悬停悬浮框显示钱币花销的按钮（替代 AddButton + CoinText 汉字）。</summary>
     private static void AddCoinButton(UIPanel panel, string label, int copper, ref int top, Action onClick, Color? bg = null)
     {
         panel.Append(new UICoinButton(label, copper, bg ?? new Color(60, 90, 150), onClick)
@@ -343,7 +391,7 @@ public partial class LooteriaUIState
             Top = new StyleDimension(top, 0f),
             Left = new StyleDimension(8f, 0f)
         });
-        top += 40;
+        top += 42;
     }
 
     /// <summary>强调色分隔线。</summary>

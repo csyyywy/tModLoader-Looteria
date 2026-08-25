@@ -122,7 +122,7 @@ public partial class LooteriaUIState
             {
                 Top = new StyleDimension(top, 0f),
                 Left = new StyleDimension(430f, 0f),
-                Width = new StyleDimension(220f, 0f),
+                Width = new StyleDimension(160f, 0f),
                 Height = new StyleDimension(30f, 0f)
             };
             _content.Append(b);
@@ -174,7 +174,7 @@ public partial class LooteriaUIState
         else
         {
             int allCoins = RerollAllCoins(item.value); // 钱币 = 价值 ÷ 配置除数（RerollAllCoinDiv）
-            AddCoinButton(_content, $"{T("RerollAll")} ({RerollAllCost}{T("Dust")} + ", allCoins, ref top, () =>
+            AddCoinButton(_content, $"{T("RerollAll")} ({RerollAllCost}{T("Dust")})", allCoins, ref top, () =>
             {
                 if (BlockLocalCurrencyOp()) return; // R2
                 int coins = RerollAllCoins(item.value);
@@ -191,7 +191,7 @@ public partial class LooteriaUIState
         if (g.Rarity < LootRarity.Set)
         {
             int upCoins = UpgradeCoins(item.value); // 钱币 = 价值 ÷ 配置除数（UpgradeCoinDiv）
-            AddCoinButton(_content, $"{T("Upgrade")} ({UpgradeCost}{T("Dust")} + {T("SameItem")}) + ", upCoins, ref top,
+            AddCoinButton(_content, $"{T("Upgrade")} ({UpgradeCost}{T("Dust")} + {T("SameItem")})", upCoins, ref top,
                 () => { if (BlockLocalCurrencyOp()) return; _consumeAction = _consumeAction == 1 ? 0 : 1; _rerollIdx = -1; _rerollRoll = null; _rerollAllRolls = null; Rebuild(); }, // R2
                 new Color(90, 70, 130));
             if (_consumeAction == 1)
