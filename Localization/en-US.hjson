@@ -486,7 +486,7 @@ Mods: {
 		}
 
 		EnemyAffix: {
-			Prefix: {0} {1}
+			Prefix: "{0} {1}"
 			RarityCommon: Mutated
 			RarityChampion: Elite
 			RarityBoss: Boss

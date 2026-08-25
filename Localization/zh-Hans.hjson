@@ -486,7 +486,7 @@ Mods: {
 		}
 
 		EnemyAffix: {
-			Prefix: {0}的{1}
+			Prefix: "{0}的{1}"
 			RarityCommon: 变异
 			RarityChampion: 精英
 			RarityBoss: Boss词缀
