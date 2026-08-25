@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- tModLoader 模组工程文件（1.4.4 / net8.0 / LangVersion 12） -->
+<!--
+  可移植构建（公开仓库写法）：
+  tMLMod.targets 由属性 TMLPath 定位（命令行 -p:TMLPath=... 或环境变量 TMLPath），
+  缺省时回退探测常见 Steam 库路径；也可直接改下面 <Import> 的路径为本机 tModLoader 目录。
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- 探测 tML 安装目录：环境变量/命令行 LooteriaTMLPath 优先（MSBuild 自动读环境变量），其次常见 Steam 路径。
+         注意：不能用 TMLPath（tMLMod.targets 内部用它指 tModLoader.dll，会覆盖）。 -->
+    <LooteriaTMLPath Condition="'$(LooteriaTMLPath)' == '' AND Exists('E:\SteamLibrary\steamapps\common\tModLoader\tMLMod.targets')">E:\SteamLibrary\steamapps\common\tModLoader</LooteriaTMLPath>
+    <LooteriaTMLPath Condition="'$(LooteriaTMLPath)' == '' AND Exists('D:\SteamLibrary\steamapps\common\tModLoader\tMLMod.targets')">D:\SteamLibrary\steamapps\common\tModLoader</LooteriaTMLPath>
+    <LooteriaTMLPath Condition="'$(LooteriaTMLPath)' == '' AND Exists('C:\Program Files (x86)\Steam\steamapps\common\tModLoader\tMLMod.targets')">C:\Program Files (x86)\Steam\steamapps\common\tModLoader</LooteriaTMLPath>
+    <LooteriaTMLPath Condition="'$(LooteriaTMLPath)' == ''">$(MSBuildProjectDirectory)\..\tModLoader</LooteriaTMLPath>
+  </PropertyGroup>
+  <Import Project="$(LooteriaTMLPath)\tMLMod.targets" Condition="Exists('$(LooteriaTMLPath)\tMLMod.targets')" />
+  <PropertyGroup>
+    <!-- tMLMod.targets 已设 TargetFramework=net8.0 / LangVersion=12.0 / PlatformTarget=AnyCPU -->
+    <AssemblyName>Looteria</AssemblyName>
+    <RootNamespace>Looteria</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- tMLMod.targets 只在 BuildMod=true 时设 TargetFramework；
+         发布级校验用 -p:BuildMod=false 编译时补一个兜底，避免 NETSDK1013 -->
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net8.0</TargetFramework>
+  </PropertyGroup>
+  <Target Name="CheckTML" BeforeTargets="Build" Condition="!Exists('$(LooteriaTMLPath)\tMLMod.targets')">
+    <Error Text="找不到 tMLMod.targets：请用 -p:LooteriaTMLPath=&lt;tModLoader 安装目录&gt; 指定（或设置环境变量 LooteriaTMLPath），当前 LooteriaTMLPath=$(LooteriaTMLPath)" />
+  </Target>
+</Project>

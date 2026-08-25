@@ -1,0 +1,31 @@
+# ---- build artifacts ----
+bin/
+obj/
+*.tmod
+*.dll
+*.pdb
+
+# ---- local machine paths (private) ----
+Properties/
+
+# ---- internal dev memory (personal paths / dev workflow) ----
+_devmem/
+tools/
+
+# ---- orphan asset ----
+Content/Items/AgainTicket.png
+
+# ---- IDE / editor ----
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+
+# ---- logs & temp ----
+*.log
+tModLoader-Logs/
+*.tmp
+*.bak
+Thumbs.db
+.DS_Store

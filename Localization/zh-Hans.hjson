@@ -1,0 +1,617 @@
+Mods: {
+	Looteria: {
+		Configs: {
+			LooteriaConfig: {
+				DisplayName: 掠夺之地配置
+
+				Enable: {
+					Label: 启用掠夺之地
+					Tooltip: 整个打宝系统的总开关。
+				}
+
+				AffectModdedItems: {
+					Label: 作用于其它模组物品
+					Tooltip: 是否对其它模组物品也附加词缀。关闭则只作用于原版物品。
+				}
+
+				DropRateMult: {
+					Label: 掉落率倍率
+					Tooltip: 稀有度权重的全局倍率（0.1x - 5x），作用于魔法及以上稀有度。
+				}
+
+				BloodShardRate: {
+					Label: 血岩获取倍率
+					Tooltip: 击杀/秘境奖励获得血岩的倍率（1x - 10x）。
+				}
+
+				DustRate: {
+					Label: 重铸之尘获取倍率
+					Tooltip: 击杀/秘境奖励/拆解获得重铸之尘的倍率（1x - 10x）。
+				}
+
+				MaxStageDropMult: {
+					Label: 阶段掉落倍率上限
+					Tooltip: 血岩/尘掉落随怪物阶段（0~7）从初始 1x 线性涨到该值（默认 10x）。
+				}
+
+				GambleWinChance: {
+					Label: 抽奖中奖率
+					Tooltip: 血岩抽奖抽中当前档装备的概率（1% - 50%，默认 10%，步进 0.5%）。
+				}
+
+				WinSetWeight: {
+					Label: 中奖内·套装权重
+					Tooltip: 中奖装备中套装占的相对权重（默认 8，总权重 = 四项之和 → 占中奖 8%）。
+				}
+
+				WinLegendaryWeight: {
+					Label: 中奖内·传说权重
+					Tooltip: 中奖装备中传说占的相对权重（默认 16 → 占中奖 16%）。
+				}
+
+				WinRareWeight: {
+					Label: 中奖内·稀有权重
+					Tooltip: 中奖装备中稀有占的相对权重（默认 30 → 占中奖 30%）。
+				}
+
+				WinMagicWeight: {
+					Label: 中奖内·魔法权重
+					Tooltip: 中奖装备中魔法占的相对权重（默认 46 → 占中奖 46%）。
+				}
+
+				GambleContainerSize: {
+					Label: 掠夺容器格数
+					Tooltip: 抽奖存储容器最多容纳的物品数（默认 200）。
+				}
+
+				RerollOneDust: {
+					Label: 单条重铸费用（重铸之尘）
+					Tooltip: 重铸单条词缀消耗的重铸之尘（默认 60；另需装备价值/10 铜币）。
+				}
+
+				RerollAllDust: {
+					Label: 全部重铸费用（重铸之尘）
+					Tooltip: 全部重铸消耗的重铸之尘（默认 20；另需装备价值/20 铜币）。
+				}
+
+				UpgradeDust: {
+					Label: 稀有度升档费用（重铸之尘）
+					Tooltip: 升档消耗的重铸之尘（默认 120；另需装备价值/10 铜币 + 1 件同名装备）。
+				}
+
+				UpgradeRarityChance: {
+					Label: 升档成功率
+					Tooltip: 稀有度升档的成功概率（默认 30%）。
+				}
+
+				SalvageDivisor: {
+					Label: 拆解尘除数
+					Tooltip: 拆解获得的重铸之尘 = 力量等级 ÷ 该值（≥1，默认 2）。
+				}
+
+				SocketCostDust: {
+					Label: 开槽费用（重铸之尘）
+					Tooltip: 开槽消耗的重铸之尘（默认 40；另需装备价值/20 铜币 + 1 件同名装备）。
+				}
+
+				EliteChance: {
+					Label: 精英怪概率
+					Tooltip: 非 Boss 敌人成为精英怪的概率（默认 8%）。
+				}
+
+				RiftCostPerLevel: {
+					Label: 秘境每层血岩费用
+					Tooltip: 开启第 N 层秘境消耗 = N × 该值（默认 50）。
+				}
+
+				RiftDurationMinutes: {
+					Label: 秘境时长（分钟）
+					Tooltip: 每层秘境的时间限制，分钟（默认 9，霜月时长）。
+				}
+
+				TicketDust: {
+					Label: 谢谢惠顾券安慰尘
+					Tooltip: 使用谢谢惠顾券获得的重铸之尘（默认 5）。
+				}
+
+				MaxSockets: {
+					Label: 装备插槽上限
+					Tooltip: 单件装备最多拥有的插槽总数（默认 6）。
+				}
+
+				MaxOpenedSockets: {
+					Label: 可手动开启插槽数
+					Tooltip: 单件装备最多通过开槽增加的插槽数（默认 4）。
+				}
+
+				AffixMaxAllDamage: {
+					Label: 词缀上限·全伤害
+					Tooltip: 词缀数值上限（内置默认 100）。
+				}
+
+				AffixMaxMeleeDamage: {
+					Label: 词缀上限·近战伤害
+					Tooltip: 词缀数值上限（内置默认 150）。
+				}
+
+				AffixMaxRangedDamage: {
+					Label: 词缀上限·远程伤害
+					Tooltip: 词缀数值上限（内置默认 150）。
+				}
+
+				AffixMaxMagicDamage: {
+					Label: 词缀上限·魔法伤害
+					Tooltip: 词缀数值上限（内置默认 150）。
+				}
+
+				AffixMaxSummonDamage: {
+					Label: 词缀上限·召唤伤害
+					Tooltip: 词缀数值上限（内置默认 150）。
+				}
+
+				AffixMaxCritChance: {
+					Label: 词缀上限·暴击率
+					Tooltip: 词缀数值上限（内置默认 30）。
+				}
+
+				AffixMaxCritDamage: {
+					Label: 词缀上限·暴击伤害
+					Tooltip: 词缀数值上限（内置默认 100）。
+				}
+
+				AffixMaxAttackSpeed: {
+					Label: 词缀上限·攻速
+					Tooltip: 词缀数值上限（内置默认 60）。
+				}
+
+				AffixMaxFlatDamage: {
+					Label: 词缀上限·平坦伤害
+					Tooltip: 词缀数值上限（内置默认 60）。
+				}
+
+				AffixMaxLifeOnHit: {
+					Label: 词缀上限·命中回血
+					Tooltip: 词缀数值上限（内置默认 3；固定数值，非伤害百分比）。
+				}
+
+				AffixMaxManaOnHit: {
+					Label: 词缀上限·命中回蓝
+					Tooltip: 词缀数值上限（内置默认 2）。
+				}
+
+				AffixMaxManaCost: {
+					Label: 词缀上限·魔力消耗
+					Tooltip: 词缀数值上限（内置默认 50）。
+				}
+
+				AffixMaxKnockback: {
+					Label: 词缀上限·击退
+					Tooltip: 词缀数值上限（内置默认 150）。
+				}
+
+				AffixMaxDefense: {
+					Label: 词缀上限·防御
+					Tooltip: 词缀数值上限（内置默认 12）。
+				}
+
+				AffixMaxDamageReduction: {
+					Label: 词缀上限·减伤
+					Tooltip: 词缀数值上限（内置默认 5）。
+				}
+
+				AffixMaxMaxLife: {
+					Label: 词缀上限·最大生命
+					Tooltip: 词缀数值上限（内置默认 200）。
+				}
+
+				AffixMaxLifeRegen: {
+					Label: 词缀上限·生命回复
+					Tooltip: 词缀数值上限（内置默认 6）。
+				}
+
+				AffixMaxManaRegen: {
+					Label: 词缀上限·魔力回复
+					Tooltip: 词缀数值上限（内置默认 10）。
+				}
+
+				AffixMaxMoveSpeed: {
+					Label: 词缀上限·移速
+					Tooltip: 词缀数值上限（内置默认 40）。
+				}
+
+				AffixMaxBuffResistPoison: {
+					Label: 词缀上限·免疫中毒
+					Tooltip: 词缀数值上限（内置默认 100）。
+				}
+
+				AffixMaxBuffResistFire: {
+					Label: 词缀上限·免疫燃烧
+					Tooltip: 词缀数值上限（内置默认 100）。
+				}
+
+				AffixMaxBuffResistBleed: {
+					Label: 词缀上限·免疫流血
+					Tooltip: 词缀数值上限（内置默认 100）。
+				}
+
+				AffixMaxBuffResistCurse: {
+					Label: 词缀上限·免疫诅咒焰
+					Tooltip: 词缀数值上限（内置默认 100）。
+				}
+
+				AffixMaxBuffResistSlow: {
+					Label: 词缀上限·免疫减速
+					Tooltip: 词缀数值上限（内置默认 100）。
+				}
+
+				AffixMaxMiningSpeed: {
+					Label: 词缀上限·挖掘速度
+					Tooltip: 词缀数值上限（内置默认 80）。
+				}
+
+				AffixMaxFishingPower: {
+					Label: 词缀上限·渔力
+					Tooltip: 词缀数值上限（内置默认 40）。
+				}
+
+				AffixMaxFlatArmorShred: {
+					Label: 词缀上限·破甲（固定）
+					Tooltip: 词缀数值上限（内置默认 5；持有时计入护甲穿透，同鲨鱼项链）。
+				}
+
+				AffixMaxPctArmorShred: {
+					Label: 词缀上限·破甲（百分比）
+					Tooltip: 词缀数值上限（内置默认 5；持有时计入护甲穿透，同鲨鱼项链）。
+				}
+
+				AffectWeapons: {
+					Label: 作用于武器
+					Tooltip: 武器是否可以附加词缀。
+				}
+
+				AffectArmor: {
+					Label: 作用于护甲
+					Tooltip: 护甲是否可以附加词缀。
+				}
+
+				AffectAccessories: {
+					Label: 作用于饰品
+					Tooltip: 饰品是否可以附加词缀。
+				}
+
+				AffectTools: {
+					Label: 作用于工具（镐/钓竿）
+					Tooltip: 工具与钓竿是否可以附加词缀。
+				}
+
+				ExcludedItems: {
+					Label: 排除物品
+					Tooltip: 永不附加词缀的物品显示名列表。
+				}
+			}
+		}
+
+		Messages: {
+			LootGained: 血岩 +{0}
+			DustGained: 重铸之尘 +{0}
+			NotEnoughShards: 血岩不足！
+			NotEnoughDust: 重铸之尘不足！
+			Ineligible: 该物品无法附加词缀。
+			Salvaged: 拆解 {0}，获得 {1} 重铸之尘。
+			Rerolled: 已重铸 {0}。
+			RiftStarted: 秘境 {0} 层开始！已消耗 {1} 血岩。守住入侵，击败关底 Boss！
+			RiftWave: 波次 {0} 来袭！
+			RiftBoss: 关底 Boss 出现了！
+			RiftCompleted: 秘境 {0} 层通关！血岩 +{1}，重铸之尘 +{2}。
+			RiftFailed: 秘境失败，时间耗尽。
+			RiftDungeonWarn: 注意：你身处地牢区且未击败骷髅王——地牢守卫是游戏原版在这里刷的（不是秘境刷的）。建议离开地牢范围再继续秘境。
+			GemGained: 获得宝石：{0}
+			TicketThanks: 谢谢惠顾！获得 {0} 重铸之尘。
+			GemUpgradeNeed: 还需 {0} 颗{1}才能升阶。
+		}
+
+		Rarity: {
+			0: 普通
+			1: 魔法
+			2: 稀有
+			3: 传说
+			4: 套装
+		}
+
+		Affix: {
+			AllDamage: {
+				Fire: +{0}% 全伤害（火焰）
+				Ice: +{0}% 全伤害（寒冰）
+				Lightning: +{0}% 全伤害（闪电）
+				Poison: +{0}% 全伤害（剧毒）
+				Shadow: +{0}% 全伤害（暗影）
+				Holy: +{0}% 全伤害（神圣）
+			}
+
+			MeleeDamage: +{0}% 近战伤害
+			RangedDamage: +{0}% 远程伤害
+			MagicDamage: +{0}% 魔法伤害
+			SummonDamage: +{0}% 召唤伤害
+
+			CritChance: {
+				Speed: +{0}% 暴击率
+				Luck: +{0}% 暴击率
+			}
+
+			CritDamage: +{0}% 暴击伤害
+			AttackSpeed: +{0}% 攻击速度
+
+			FlatDamage: {
+				Melee: +{0} 近战伤害
+				Ranged: +{0} 远程伤害
+				Magic: +{0} 魔法伤害
+				Summon: +{0} 召唤伤害
+			}
+
+			LifeOnHit: {
+				Holy: +{0} 命中回血
+				Shadow: +{0} 命中回血
+			}
+
+			ManaOnHit: +{0} 命中回蓝
+			ManaCost: -{0}% 魔力消耗
+			Knockback: +{0}% 击退
+			Defense: +{0} 防御
+			DamageReduction: +{0}% 减伤
+			MaxLife: +{0} 最大生命
+			LifeRegen: +{0}/秒 生命回复
+			ManaRegen: +{0} 魔力回复
+			MoveSpeed: +{0}% 移动速度
+			BuffResistPoison: 免疫中毒
+			BuffResistFire: 免疫燃烧
+			BuffResistBleed: 免疫流血
+			BuffResistCurse: 免疫诅咒焰
+			BuffResistSlow: 免疫减速
+			MiningSpeed: +{0}% 挖掘速度
+			FishingPower: +{0} 渔力
+
+			ArmorShred: {
+				Flat: +{0} 破甲（固定）
+				Pct: +{0} 破甲（百分比）
+			}
+		}
+
+		Theme: {
+			0: 火焰
+			1: 寒冰
+			2: 风暴
+			3: 剧毒
+			4: 暗影
+			5: 神圣
+			6: 近战
+			7: 远程
+			8: 魔法
+			9: 召唤
+			10: 守护
+			11: 疾速
+			12: 幸运
+		}
+
+		Legendary: {
+			1: 连锁闪电：命中时 30% 概率向附近 2 名敌人弹射闪电
+			2: 灼烧：命中附加灼烧（On Fire!）
+			3: 嗜血：造成的伤害的 3% 回复生命
+			4: 处刑：击杀时爆炸，对周围敌人造成 100% 伤害
+			5: 穿透：弹幕额外穿透 1 个目标
+			6: 分裂：弹幕 20% 概率分裂为 2 枚
+			7: 天雷：每 3 秒召唤一道落雷
+			8: 荆棘：反弹所受伤害的 50%
+			9: 顺劈：近战命中溅射 75% 伤害
+			10: 狂乱：生命低于 30% 时 +25% 伤害
+		}
+
+		Gem: {
+			0: {
+				0: 瑕疵红宝石
+				1: 红宝石
+				2: 无瑕红宝石
+				3: 完美红宝石
+			}
+
+			1: {
+				0: 瑕疵蓝宝石
+				1: 蓝宝石
+				2: 无瑕蓝宝石
+				3: 完美蓝宝石
+			}
+
+			2: {
+				0: 瑕疵绿宝石
+				1: 绿宝石
+				2: 无瑕绿宝石
+				3: 完美绿宝石
+			}
+
+			3: {
+				0: 瑕疵紫水晶
+				1: 紫水晶
+				2: 无瑕紫水晶
+				3: 完美紫水晶
+			}
+
+			4: {
+				0: 瑕疵黄玉
+				1: 黄玉
+				2: 无瑕黄玉
+				3: 完美黄玉
+			}
+
+			5: {
+				0: 瑕疵钻石
+				1: 钻石
+				2: 无瑕钻石
+				3: 完美钻石
+			}
+		}
+
+		UI: {
+			Title: 掠夺之地
+			Currency: 血岩 {0} · 重铸之尘 {1} · 掠夺之力 {2}
+			TabEquip: 装备
+			TabReroll: 重铸
+			TabSocket: 镶嵌
+			TabEnhance: 升阶
+			TabGamble: 抽奖
+			TabRift: 秘境
+			TabHelp: 说明
+			HelpTitle: 游戏说明（Wiki 式：点目录选文档，翻页查看）
+			HelpPrev: 上一页
+			HelpNext: 下一页
+			HelpEmpty: 该文档为空或未找到。
+			RiftBarText: 秘境 第{0}层 · 进度 {1}/{2} · 剩余 {3}:{4:D2}
+			EquipHint: 点击物品查看详情，拆解可获得重铸之尘。
+			RerollHint: 点击物品，然后重铸它的词缀。
+			SocketHint: 装备最多 6 个插槽。传说/套装自带 1-2 个；开槽可再开 4 个（消耗同名装备）。宝石击杀敌人掉落。
+			GambleHint: 抽奖：花费血岩换取随机物品。
+			SocketAdd: 开槽
+			SocketCost: 消耗同名装备×1
+			SocketAdded: 开槽成功！
+			NoSameItem: 背包里没有同名装备可消耗。
+			NoItem: 未选择物品。
+			NoEligible: 背包里没有可打宝的物品（武器/护甲/饰品）。
+			NoAffixYet: 该物品还没有词缀——击杀敌人、秘境通关或抽奖获得带词缀装备。
+			NoGems: 没有宝石。
+			NoSockets: 该装备还没有插槽，可点"开槽"增加。
+			Salvage: 拆解
+			RerollOne: 重铸单条
+			RerollAll: 全部重铸
+			Upgrade: 升档
+			UpgradeOk: 升级成功！
+			UpgradeFail: 升级失败。
+			Dust: 尘
+			Shards: 血岩
+			Cost: 花费
+			Empty: 空
+			GambleWeapon: 武器
+			GambleArmor: 护甲
+			GambleAccessory: 饰品
+			Gamble: 抽奖
+			GambleOk: 抽中了！
+			GambleFail: 该类没有可用物品。
+
+			GambleTier: {
+				T0: 基础档
+				T1: 克脑后
+				T2: 骷髅王
+				T3: 肉山后
+				T4: 机械三王
+				T5: 世纪之花
+				T6: 石巨人
+				T7: 月亮领主
+			}
+
+			GambleCost: 每抽花费
+			CurShards: 你的血岩
+			GambleOnce: 单抽
+			GambleTen: 十连抽
+			GambleTenResult: 十连结果：抽中
+			GambleWin: 抽中
+			GambleLose: 未中
+			GamblePickHint: 抽到的物品：点击选择保留（亮框），未选的一起分解
+			ClaimSelected: 领取所选（其余分解）
+			ClaimAll: 全部领取
+			SalvageAll: 全部分解
+			Claim: 领取
+			Claimed: 已领取
+			DustGain: 获得尘
+			Container: 掠夺容器
+			ContainerFull: 容器已满！请先领取或分解。
+			GambleEmpty: 容器是空的——去抽奖吧（抽到的物品都存到这里，可滚动查看）。
+			ContainerTitle: 掠夺容器（点击格子 = 领取到背包）
+			Power: 力量
+			Sockets: 插槽
+			SocketGemSel: 宝石背包（点击选择要镶嵌的宝石）
+			SocketGemHeld: 已选
+			SocketEquipSel: 装备与插槽（先选装备，再点插槽）
+			SocketPickGem: 请先在背包里选择一颗宝石。
+			SocketPickGemFirst: 请先选择一颗宝石，再点空插槽镶嵌。
+			EnhanceGemSel: 宝石背包（点击选择要升阶的宝石）
+			EnhanceTitle: 升阶（DNF 式强化）
+			EnhanceNoSel: 请先在上方选择一颗宝石。
+			EnhanceMat: 材料
+			EnhanceRate: 成功率
+			Need: 需要
+			GemUp: 强化
+			GemUpgrade: 升阶
+			GemUpgradeMat: 原版宝石
+			GemUpgradeNoMat: 没有对应的原版宝石可消耗。
+			GemUpgradeOk: 升阶成功！效果 +10%。
+			GemUpgradeFail: 升阶失败！材料已消耗。
+			NotEnoughShards: 血岩不足！
+			NotEnoughDust: 重铸之尘不足！
+			NotEnoughCoins: 钱币不足！
+			NotEnoughCost: 尘或钱币不足！
+			Value: 价值
+			RerollAffixes: 词缀（点每条右侧"重铸"演练）
+			RerollPreview: 重铸演练
+			RerollFrom: 原词条
+			RerollTo: 重铸后
+			RerollConfirm: 确认重铸
+			RerollConfirmAll: 确认全部重铸
+			RerollCancel: 取消
+			Rerolled: 重铸完成！
+			RerolledAll: 全部重铸完成！
+			SameItem: 同名装备×1
+			PickMatItem: 选择要消耗的同名装备
+			CoinGold: 金
+			CoinSilver: 银
+			CoinCopper: 铜
+			RiftTitle: 秘境（入侵事件 · 模仿哨兵 9 分钟）
+			RiftNext: 下一层
+			RiftBest: 最佳
+			RiftReq: 需求力量
+			RiftPower: 你的力量
+			RiftCostLabel: 开启消耗
+			RiftNeedPower: 掠夺之力不足，还差 {0}。
+			RiftNeedShards: 血岩不足，还差 {0}。
+			RiftActive: 秘境进行中 · 第
+			RiftTime: 剩余
+			RiftWave: 波次
+			RiftStart: 开启秘境
+			RiftAbort: 中止秘境
+			RiftLevelPick: 层数 {0}（可选 1~{1}）
+			RiftJumpBest: 最佳层
+			RiftJumpNext: 下一层
+			RiftFreePick: 可自由选择已通关的任意层或下一层：通关上一关 + 力量达标即可开始。
+			RiftStartFail: 秘境开启失败。
+			OpFailed: 操作失败。
+			MpLocalOpDisabled: 该操作在多人（客户端）暂不可用——货币为服务器权威，请在主机/单人中使用，或等待服务端结算。
+		}
+
+		GemTip: {
+			0: 红宝石
+			1: 蓝宝石
+			2: 绿宝石
+			3: 紫水晶
+			4: 黄玉
+			5: 钻石
+		}
+
+		GemTipEffect: {
+			0: +{0}% 全伤害
+			1: +{0}% 暴击率
+			2: +{0}% 移动速度与生命回复
+			3: +{0} 最大生命
+			4: +{0} 防御
+			5: +{0}% 减伤
+		}
+
+		GemTipUpgrade: 强化 +{0}（效果 +{1}%）
+
+		Ticket: {
+			ThankYouName: 谢谢惠顾券
+			ThankYouTooltip:
+				'''
+				抽奖空奖时的安慰奖。
+				使用后获得 {0} 重铸之尘。
+				'''
+		}
+
+		Keybinds.LooteriaPanel.DisplayName: 掠夺面板
+	}
+}

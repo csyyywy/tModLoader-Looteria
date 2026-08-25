@@ -1,0 +1,617 @@
+Mods: {
+	Looteria: {
+		Configs: {
+			LooteriaConfig: {
+				DisplayName: Looteria Config
+
+				Enable: {
+					Label: Enable
+					Tooltip: ""
+				}
+
+				AffectModdedItems: {
+					Label: Affect Modded Items
+					Tooltip: ""
+				}
+
+				DropRateMult: {
+					Label: Drop Rate Mult
+					Tooltip: Global rarity weight multiplier (0.1x - 5x), applies to Magic and above.
+				}
+
+				BloodShardRate: {
+					Label: Blood Shard Rate
+					Tooltip: Blood Shard gain multiplier from kills / Rift rewards (1x - 10x).
+				}
+
+				DustRate: {
+					Label: Reforge Dust Rate
+					Tooltip: Reforge Dust gain multiplier from kills / Rift rewards / salvage (1x - 10x).
+				}
+
+				MaxStageDropMult: {
+					Label: Max Stage Drop Mult
+					Tooltip: Blood Shard / Reforge Dust drops scale with monster stage (0-7) linearly from 1x to this value (default 10x).
+				}
+
+				GambleWinChance: {
+					Label: Draw Win Chance
+					Tooltip: Chance to hit the current tier's gear when drawing (1% - 50%, default 10%, step 0.5%).
+				}
+
+				WinSetWeight: {
+					Label: Win: Set Weight
+					Tooltip: Relative weight of Set gear among winning draws (default 8; total = sum of all four → 8% of wins).
+				}
+
+				WinLegendaryWeight: {
+					Label: Win: Legendary Weight
+					Tooltip: Relative weight of Legendary gear among winning draws (default 16 → 16% of wins).
+				}
+
+				WinRareWeight: {
+					Label: Win: Rare Weight
+					Tooltip: Relative weight of Rare gear among winning draws (default 30 → 30% of wins).
+				}
+
+				WinMagicWeight: {
+					Label: Win: Magic Weight
+					Tooltip: Relative weight of Magic gear among winning draws (default 46 → 46% of wins).
+				}
+
+				GambleContainerSize: {
+					Label: Draw Container Size
+					Tooltip: Max items the draw container can hold (default 200).
+				}
+
+				RerollOneDust: {
+					Label: Reroll One Cost (Dust)
+					Tooltip: Reforge Dust cost to reroll a single affix (default 60; plus item value / 10 coins).
+				}
+
+				RerollAllDust: {
+					Label: Reroll All Cost (Dust)
+					Tooltip: Reforge Dust cost to reroll all affixes (default 20; plus item value / 20 coins).
+				}
+
+				UpgradeDust: {
+					Label: Rarity Upgrade Cost (Dust)
+					Tooltip: Reforge Dust cost to upgrade rarity (default 120; plus item value / 10 coins and 1 same-name item).
+				}
+
+				UpgradeRarityChance: {
+					Label: Upgrade Success Chance
+					Tooltip: Chance for a rarity upgrade to succeed (default 30%).
+				}
+
+				SalvageDivisor: {
+					Label: Salvage Dust Divisor
+					Tooltip: Salvaged Reforge Dust = Power Score / this value (>= 1, default 2).
+				}
+
+				SocketCostDust: {
+					Label: Socket Cost (Reforge Dust)
+					Tooltip: Cost in Reforge Dust to open a socket (default 40; plus item value/20 copper + 1 same-name item).
+				}
+
+				EliteChance: {
+					Label: Elite Chance
+					Tooltip: Chance for a non-boss enemy to become an Elite (default 8%).
+				}
+
+				RiftCostPerLevel: {
+					Label: Rift Cost per Level (Shards)
+					Tooltip: Starting Rift level N costs N x this in Blood Shards (default 50).
+				}
+
+				RiftDurationMinutes: {
+					Label: Rift Duration (minutes)
+					Tooltip: Time limit per Rift level in minutes (default 9, Frost Moon length).
+				}
+
+				TicketDust: {
+					Label: Consolation Ticket Dust
+					Tooltip: Reforge Dust gained from using a Thank-You Ticket (default 5).
+				}
+
+				MaxSockets: {
+					Label: Max Sockets
+					Tooltip: Maximum total sockets a single item can have (default 6).
+				}
+
+				MaxOpenedSockets: {
+					Label: Max Manually Opened Sockets
+					Tooltip: Maximum sockets a single item can gain from socket-opening (default 4).
+				}
+
+				AffixMaxAllDamage: {
+					Label: Affix Cap: All Damage
+					Tooltip: Affix value cap (built-in default 100).
+				}
+
+				AffixMaxMeleeDamage: {
+					Label: Affix Cap: Melee Damage
+					Tooltip: Affix value cap (built-in default 150).
+				}
+
+				AffixMaxRangedDamage: {
+					Label: Affix Cap: Ranged Damage
+					Tooltip: Affix value cap (built-in default 150).
+				}
+
+				AffixMaxMagicDamage: {
+					Label: Affix Cap: Magic Damage
+					Tooltip: Affix value cap (built-in default 150).
+				}
+
+				AffixMaxSummonDamage: {
+					Label: Affix Cap: Summon Damage
+					Tooltip: Affix value cap (built-in default 150).
+				}
+
+				AffixMaxCritChance: {
+					Label: Affix Cap: Crit Chance
+					Tooltip: Affix value cap (built-in default 30).
+				}
+
+				AffixMaxCritDamage: {
+					Label: Affix Cap: Crit Damage
+					Tooltip: Affix value cap (built-in default 100).
+				}
+
+				AffixMaxAttackSpeed: {
+					Label: Affix Cap: Attack Speed
+					Tooltip: Affix value cap (built-in default 60).
+				}
+
+				AffixMaxFlatDamage: {
+					Label: Affix Cap: Flat Damage
+					Tooltip: Affix value cap (built-in default 60).
+				}
+
+				AffixMaxLifeOnHit: {
+					Label: Affix Cap: Life on Hit
+					Tooltip: Affix value cap (built-in default 3; flat heal, not % of damage).
+				}
+
+				AffixMaxManaOnHit: {
+					Label: Affix Cap: Mana on Hit
+					Tooltip: Affix value cap (built-in default 2).
+				}
+
+				AffixMaxManaCost: {
+					Label: Affix Cap: Mana Cost
+					Tooltip: Affix value cap (built-in default 50).
+				}
+
+				AffixMaxKnockback: {
+					Label: Affix Cap: Knockback
+					Tooltip: Affix value cap (built-in default 150).
+				}
+
+				AffixMaxDefense: {
+					Label: Affix Cap: Defense
+					Tooltip: Affix value cap (built-in default 12).
+				}
+
+				AffixMaxDamageReduction: {
+					Label: Affix Cap: Damage Reduction
+					Tooltip: Affix value cap (built-in default 5).
+				}
+
+				AffixMaxMaxLife: {
+					Label: Affix Cap: Max Life
+					Tooltip: Affix value cap (built-in default 200).
+				}
+
+				AffixMaxLifeRegen: {
+					Label: Affix Cap: Life Regen
+					Tooltip: Affix value cap (built-in default 6).
+				}
+
+				AffixMaxManaRegen: {
+					Label: Affix Cap: Mana Regen
+					Tooltip: Affix value cap (built-in default 10).
+				}
+
+				AffixMaxMoveSpeed: {
+					Label: Affix Cap: Move Speed
+					Tooltip: Affix value cap (built-in default 40).
+				}
+
+				AffixMaxBuffResistPoison: {
+					Label: Affix Cap: Poison Resist
+					Tooltip: Affix value cap (built-in default 100).
+				}
+
+				AffixMaxBuffResistFire: {
+					Label: Affix Cap: Fire Resist
+					Tooltip: Affix value cap (built-in default 100).
+				}
+
+				AffixMaxBuffResistBleed: {
+					Label: Affix Cap: Bleed Resist
+					Tooltip: Affix value cap (built-in default 100).
+				}
+
+				AffixMaxBuffResistCurse: {
+					Label: Affix Cap: Curse Resist
+					Tooltip: Affix value cap (built-in default 100).
+				}
+
+				AffixMaxBuffResistSlow: {
+					Label: Affix Cap: Slow Resist
+					Tooltip: Affix value cap (built-in default 100).
+				}
+
+				AffixMaxMiningSpeed: {
+					Label: Affix Cap: Mining Speed
+					Tooltip: Affix value cap (built-in default 80).
+				}
+
+				AffixMaxFishingPower: {
+					Label: Affix Cap: Fishing Power
+					Tooltip: Affix value cap (built-in default 40).
+				}
+
+				AffixMaxFlatArmorShred: {
+					Label: Affix Cap: Armor Shred (Flat)
+					Tooltip: Affix value cap (built-in default 5; flat defense shred applied after the percentage).
+				}
+
+				AffixMaxPctArmorShred: {
+					Label: Affix Cap: Armor Shred (Pct)
+					Tooltip: Affix value cap (built-in default 5; percentage defense shred applied first).
+				}
+
+				AffectWeapons: {
+					Label: Affect Weapons
+					Tooltip: ""
+				}
+
+				AffectArmor: {
+					Label: Affect Armor
+					Tooltip: ""
+				}
+
+				AffectAccessories: {
+					Label: Affect Accessories
+					Tooltip: ""
+				}
+
+				AffectTools: {
+					Label: Affect Tools
+					Tooltip: ""
+				}
+
+				ExcludedItems: {
+					Label: Excluded Items
+					Tooltip: ""
+				}
+			}
+		}
+
+		Messages: {
+			LootGained: Blood Shards +{0}
+			DustGained: Reforge Dust +{0}
+			NotEnoughShards: Not enough Blood Shards!
+			NotEnoughDust: Not enough Reforge Dust!
+			Ineligible: This item cannot hold affixes.
+			Salvaged: Salvaged {0} for {1} Reforge Dust.
+			Rerolled: Rerolled {0}.
+			RiftStarted: Rift {0} started! {1} Blood Shards spent. Hold the invasion and kill the final boss!
+			RiftWave: Wave {0} incoming!
+			RiftBoss: The final boss has appeared!
+			RiftCompleted: Rift {0} completed! Blood Shards +{1}, Reforge Dust +{2}.
+			RiftFailed: Rift failed. Time's up.
+			RiftDungeonWarn: Note: you are in the Dungeon without defeating Skeletron — Dungeon Guardians here are spawned by vanilla (not the Rift). Move away from the Dungeon.
+			GemGained: Gem gained: {0}
+			TicketThanks: Thank you! Got {0} Reforge Dust.
+			GemUpgradeNeed: Need {0} more {1} to upgrade.
+		}
+
+		Rarity: {
+			0: Common
+			1: Magic
+			2: Rare
+			3: Legendary
+			4: Set
+		}
+
+		Affix: {
+			AllDamage: {
+				Fire: +{0}% all damage (fire)
+				Ice: +{0}% all damage (ice)
+				Lightning: +{0}% all damage (lightning)
+				Poison: +{0}% all damage (poison)
+				Shadow: +{0}% all damage (shadow)
+				Holy: +{0}% all damage (holy)
+			}
+
+			MeleeDamage: +{0}% melee damage
+			RangedDamage: +{0}% ranged damage
+			MagicDamage: +{0}% magic damage
+			SummonDamage: +{0}% summon damage
+
+			CritChance: {
+				Speed: +{0}% crit chance
+				Luck: +{0}% crit chance
+			}
+
+			CritDamage: +{0}% crit damage
+			AttackSpeed: +{0}% attack speed
+
+			FlatDamage: {
+				Melee: +{0} flat melee damage
+				Ranged: +{0} flat ranged damage
+				Magic: +{0} flat magic damage
+				Summon: +{0} flat summon damage
+			}
+
+			LifeOnHit: {
+				Holy: +{0} life on hit
+				Shadow: +{0} life on hit
+			}
+
+			ManaOnHit: +{0} mana on hit
+			ManaCost: -{0}% mana cost
+			Knockback: +{0}% knockback
+			Defense: +{0} defense
+			DamageReduction: +{0}% damage reduction
+			MaxLife: +{0} max life
+			LifeRegen: +{0}/s life regen
+			ManaRegen: +{0} mana regen
+			MoveSpeed: +{0}% move speed
+			BuffResistPoison: Immune to poison
+			BuffResistFire: Immune to fire
+			BuffResistBleed: Immune to bleeding
+			BuffResistCurse: Immune to cursed flame
+			BuffResistSlow: Immune to slow
+			MiningSpeed: +{0}% mining speed
+			FishingPower: +{0} fishing power
+
+			ArmorShred: {
+				Flat: +{0} armor shred (flat)
+				Pct: +{0} armor shred (pct)
+			}
+		}
+
+		Theme: {
+			0: Flame
+			1: Frost
+			2: Storm
+			3: Venom
+			4: Shadow
+			5: Holy
+			6: Melee
+			7: Ranged
+			8: Magic
+			9: Summon
+			10: Guard
+			11: Swift
+			12: Fortune
+		}
+
+		Legendary: {
+			1: Chain Lightning: 30% chance to arc to 2 nearby enemies on hit
+			2: Ignite: applies On Fire! on hit
+			3: Bloodthirst: heal 3% of damage dealt
+			4: Executioner: killing blows explode for 100% damage in an area
+			5: Piercing: projectiles pierce 1 extra target
+			6: Split: projectiles split into 2 with 20% chance
+			7: Sky Thunder: call down lightning every 3 seconds
+			8: Thorns: reflect 50% of damage taken
+			9: Cleave: melee hits splash 75% damage in an area
+			10: Frenzy: +25% damage while below 30% life
+		}
+
+		Gem: {
+			0: {
+				0: Flawed Ruby
+				1: Ruby
+				2: Flawless Ruby
+				3: Perfect Ruby
+			}
+
+			1: {
+				0: Flawed Sapphire
+				1: Sapphire
+				2: Flawless Sapphire
+				3: Perfect Sapphire
+			}
+
+			2: {
+				0: Flawed Emerald
+				1: Emerald
+				2: Flawless Emerald
+				3: Perfect Emerald
+			}
+
+			3: {
+				0: Flawed Amethyst
+				1: Amethyst
+				2: Flawless Amethyst
+				3: Perfect Amethyst
+			}
+
+			4: {
+				0: Flawed Topaz
+				1: Topaz
+				2: Flawless Topaz
+				3: Perfect Topaz
+			}
+
+			5: {
+				0: Flawed Diamond
+				1: Diamond
+				2: Flawless Diamond
+				3: Perfect Diamond
+			}
+		}
+
+		UI: {
+			Title: Looteria
+			Currency: Blood Shards {0} · Reforge Dust {1} · Power {2}
+			TabEquip: Equip
+			TabReroll: Reroll
+			TabSocket: Socket
+			TabEnhance: Enhance
+			TabGamble: Draw
+			TabRift: Rift
+			TabHelp: Help
+			HelpTitle: In-game Guide (Wiki style: pick a doc, page through)
+			HelpPrev: Prev
+			HelpNext: Next
+			HelpEmpty: Document empty or not found.
+			RiftBarText: Rift Lv {0} · {1}/{2} · {3}:{4:D2} left
+			EquipHint: Click an item to inspect. Salvage it to get Reforge Dust.
+			RerollHint: Click an item, then reroll its affixes.
+			SocketHint: Items hold up to 6 sockets. Legendary/Set come with 1-2; open up to 4 more (consume a same-name item). Gems drop from enemies.
+			GambleHint: Draw: spend Blood Shards for a random item.
+			SocketAdd: Add Socket
+			SocketCost: consume 1 same-name item
+			SocketAdded: Socket added!
+			NoSameItem: No same-name item in inventory to consume.
+			NoItem: No item selected.
+			NoEligible: No lootable items (weapons/armor/accessories) in your inventory.
+			NoAffixYet: This item has no affixes yet — kill enemies, clear rifts, or draw to get affixed gear.
+			NoGems: No gems.
+			NoSockets: This item has no sockets yet — click "Add Socket".
+			Salvage: Salvage
+			RerollOne: Reroll One
+			RerollAll: Reroll All
+			Upgrade: Upgrade Rarity
+			UpgradeOk: Upgraded!
+			UpgradeFail: Upgrade failed.
+			Dust: dust
+			Shards: shards
+			Cost: Cost
+			Empty: Empty
+			GambleWeapon: Weapon
+			GambleArmor: Armor
+			GambleAccessory: Accessory
+			Gamble: Draw
+			GambleOk: Drawn!
+			GambleFail: No items found for that category.
+
+			GambleTier: {
+				T0: Base
+				T1: Post-BoC
+				T2: Skeletron
+				T3: Post-WoF
+				T4: Mech Bosses
+				T5: Plantera
+				T6: Golem
+				T7: Moon Lord
+			}
+
+			GambleCost: Cost per pull
+			CurShards: Your shards
+			GambleOnce: Pull x1
+			GambleTen: Pull x10
+			GambleTenResult: 10x result: won
+			GambleWin: Won
+			GambleLose: Lost
+			GamblePickHint: Pulled items: click to keep (highlighted), unselected get salvaged
+			ClaimSelected: Claim selected (salvage rest)
+			ClaimAll: Claim all
+			SalvageAll: Salvage all
+			Claim: Claim
+			Claimed: Claimed
+			DustGain: Dust gained
+			Container: Loot Container
+			ContainerFull: Container full! Claim or salvage first.
+			GambleEmpty: Container is empty — go pull! (Pulled items are stored here, scrollable.)
+			ContainerTitle: Loot Container (click a slot = claim to inventory)
+			Power: Power
+			Sockets: Sockets
+			SocketGemSel: Gem bag (click a gem to select for socketing)
+			SocketGemHeld: Selected
+			SocketEquipSel: Equipment & sockets (pick an item, then click a socket)
+			SocketPickGem: Select a gem from your bag first.
+			SocketPickGemFirst: Select a gem first, then click an empty socket.
+			EnhanceGemSel: Gem bag (click a gem to select for upgrading)
+			EnhanceTitle: Upgrade (DNF-style enhance)
+			EnhanceNoSel: Select a gem above first.
+			EnhanceMat: Materials
+			EnhanceRate: Success rate
+			Need: need
+			GemUp: Enhance
+			GemUpgrade: Upgrade Gem
+			GemUpgradeMat: vanilla gems
+			GemUpgradeNoMat: No matching vanilla gem to consume.
+			GemUpgradeOk: Upgrade success! Effect +10%.
+			GemUpgradeFail: Upgrade failed! Materials consumed.
+			NotEnoughShards: Not enough Blood Shards!
+			NotEnoughDust: Not enough Reforge Dust!
+			NotEnoughCoins: Not enough coins!
+			NotEnoughCost: Not enough dust or coins!
+			Value: Value
+			RerollAffixes: Affixes (click Reroll to preview)
+			RerollPreview: Reroll Preview
+			RerollFrom: From
+			RerollTo: To
+			RerollConfirm: Confirm Reroll
+			RerollConfirmAll: Confirm Reroll All
+			RerollCancel: Cancel
+			Rerolled: Rerolled!
+			RerolledAll: Rerolled all!
+			SameItem: same-name item ×1
+			PickMatItem: Pick an item to consume
+			CoinGold: g
+			CoinSilver: s
+			CoinCopper: c
+			RiftTitle: Rift (invasion · 9 min like Frost Moon)
+			RiftNext: Next
+			RiftBest: Best
+			RiftReq: Needs power
+			RiftPower: Your power
+			RiftCostLabel: Start cost
+			RiftNeedPower: Not enough power, need {0} more.
+			RiftNeedShards: Not enough Blood Shards, need {0} more.
+			RiftActive: Rift active · Lv
+			RiftTime: Left
+			RiftWave: Wave
+			RiftStart: Start Rift
+			RiftAbort: Abort Rift
+			RiftLevelPick: Level {0} (available 1~{1})
+			RiftJumpBest: Best Lv
+			RiftJumpNext: Next Lv
+			RiftFreePick: Pick any cleared level or the next one: beat the previous level and meet the power requirement.
+			RiftStartFail: Failed to start the Rift.
+			OpFailed: Operation failed.
+			MpLocalOpDisabled: This action is unavailable on the multiplayer client - currency is server-authoritative. Use it on the host / in singleplayer, or wait for server settlement.
+		}
+
+		GemTip: {
+			0: Ruby
+			1: Sapphire
+			2: Emerald
+			3: Amethyst
+			4: Topaz
+			5: Diamond
+		}
+
+		GemTipEffect: {
+			0: +{0}% all damage
+			1: +{0}% crit chance
+			2: +{0}% move speed and life regen
+			3: +{0} max life
+			4: +{0} defense
+			5: +{0}% damage reduction
+		}
+
+		GemTipUpgrade: Enhanced +{0} (+{1}% effect)
+
+		Ticket: {
+			ThankYouName: Thank You Ticket
+			ThankYouTooltip:
+				'''
+				A consolation from an empty prize.
+				Use it for {0} Reforge Dust.
+				'''
+		}
+
+		Keybinds.LooteriaPanel.DisplayName: Looteria Panel
+	}
+}
