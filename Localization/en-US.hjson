@@ -554,7 +554,7 @@ Mods: {
 			SetTag: Set · {0}
 			SetProgress: Wearing {0} (same theme)
 			SetActive: Active
-			SetNeed: {0} more
+			SetNeed: "{0} more"
 			SetBonus2: 2 pc: +5% all damage
 			SetBonus4: 4 pc: +10% all damage, +5% DR
 			SetBonus6: 6 pc: +20% all damage, +8% DR, +10% move speed

@@ -40,9 +40,16 @@ public static class TooltipBuilder
         {
             tooltips.Add(new TooltipLine(mod, "LooteriaSockets",
                 Language.GetTextValue("Mods.Looteria.UI.SocketsCount", g.SocketCount)) { OverrideColor = Color.DeepSkyBlue });
+            // 占位行 = iconRows 行，每行一个空格（行间 '\n'，末行不带换行）。
+            // 不能用 "n 个 '\n'"：'\n' 开头会让 ChatManager 绘制多推进 1 行而 MeasureString 只算 1 行
+            // → 图标行后视觉多空一行、最后一行（力量）被推出框外。空格行测量与绘制行数严格一致。
             int iconRows = (g.SocketCount + 5) / 6;
             if (iconRows > 0)
-                tooltips.Add(new TooltipLine(mod, "LooteriaSocketIcons", new string('\n', iconRows)));
+            {
+                var rows = new string[iconRows];
+                for (int i = 0; i < iconRows; i++) rows[i] = " ";
+                tooltips.Add(new TooltipLine(mod, "LooteriaSocketIcons", string.Join("\n", rows)));
+            }
         }
 
         // 传说之力
