@@ -122,7 +122,7 @@ public partial class LooteriaUIState
         // 开槽：自选一件同名装备消耗 + 尘/钱币（M15 修复：原按钮显示成本但分文未收）
         if (g.OpenedSockets < MaxOpenedSockets && g.SocketCount < MaxSockets)
         {
-            int sockCoins = CoinCost(item.value, 20); // 花销 ÷50：原 value/20 → value/1000
+            int sockCoins = SocketCoins(item.value); // 钱币 = 价值 ÷ 配置除数（SocketCoinDiv）
             int sockDust = LooteriaConfig.Instance?.SocketCostDust ?? 40;
             AddCoinButton(_content, $"{T("SocketAdd")} ({g.OpenedSockets}/{MaxOpenedSockets} · {sockDust}{T("Dust")} + {T("SameItem")}) + ",
                 sockCoins, ref top, () => { if (BlockLocalCurrencyOp()) return; _consumeAction = _consumeAction == 2 ? 0 : 2; Rebuild(); }, new Color(90, 70, 130)); // R2
@@ -151,7 +151,7 @@ public partial class LooteriaUIState
             Rebuild(); ShowMsg(T("NoSameItem"));
             return;
         }
-        int sockCoins = CoinCost(target.value, 20); // 花销 ÷50：原 value/20 → value/1000
+        int sockCoins = SocketCoins(target.value); // 钱币 = 价值 ÷ 配置除数（SocketCoinDiv）
         int sockDust = LooteriaConfig.Instance?.SocketCostDust ?? 40;
         // 先校验后扣款
         var lp = player.GetModPlayer<LooteriaPlayer>();
@@ -230,7 +230,7 @@ public partial class LooteriaUIState
         int vType = Content.Items.Gems.GemItemHelper.VanillaGemType(selGem.GemType);
         string vName = vType > 0 ? Lang.GetItemNameValue(vType) : T("GemUpgradeMat");
         int have = CountInventory(player, vType);
-        int coins = CoinCost(selGem.Item.value, 10); // 花销 ÷50：原 value/10 → value/500
+        int coins = GemUpgradeCoins(selGem.Item.value); // 钱币 = 宝石价值 ÷ 配置除数（GemUpgradeCoinDiv）
         float rate = Math.Max(0.3f, 1f - 0.05f * selGem.Upgrade);
 
         AddLabel(_content, $"{selGem.DisplayName.Value} · {T("GemUp")} +{selGem.Upgrade}", ref top, 0.9f, Color.LightCyan);
@@ -260,7 +260,7 @@ public partial class LooteriaUIState
     public static int GemUpgradeCost(int currentUpgrade)
         => Math.Max(1, (int)Math.Ceiling(2.0 * Math.Pow(1.5, currentUpgrade)));
 
-    /// <summary>宝石升阶：消耗 cost 颗同色原版宝石 + 宝石价值/500 钱币（原 /10 现 ÷50），成功率随阶数下降，成功 +1 阶（+10% 效果）。</summary>
+    /// <summary>宝石升阶：消耗 cost 颗同色原版宝石 + 宝石价值÷GemUpgradeCoinDiv 钱币（默认 500），成功率随阶数下降，成功 +1 阶（+10% 效果）。</summary>
     private void UpgradeGem(Player player, LooteriaPlayer lp, Content.Items.Gems.LooteriaGemItem gem, int targetSlot)
     {
         int cost = GemUpgradeCost(gem.Upgrade);
@@ -274,7 +274,7 @@ public partial class LooteriaUIState
             ShowMsg(Language.GetTextValue("Mods.Looteria.Messages.GemUpgradeNeed", cost - have, Lang.GetItemNameValue(vType)));
             return;
         }
-        int coins = CoinCost(gem.Item.value, 10); // 花销 ÷50
+        int coins = GemUpgradeCoins(gem.Item.value); // 钱币 = 宝石价值 ÷ 配置除数
         if (!TrySpendCoins(player, coins)) { ShowMsg(T("NotEnoughCoins")); return; }
 
         int need = cost;

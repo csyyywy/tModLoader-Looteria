@@ -11,6 +11,7 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader.UI;
 using Terraria.UI;
+using global::Looteria.Common.Configs;
 using global::Looteria.Common.Data;
 using global::Looteria.Common.Globals;
 
@@ -193,8 +194,23 @@ public partial class LooteriaUIState
         return (p, g, s, c);
     }
 
-    /// <summary>所有钱币花销统一除以 50（用户调价）：原价 = value / divide（10 或 20），现价 = value / (divide*50)，最低 1 铜。</summary>
-    private static int CoinCost(int value, int divide) => Math.Max(1, value / (divide * 50));
+    /// <summary>钱币费用 = 装备价值 ÷ 除数（每项独立配置，最低 1 铜）。</summary>
+    private static int CoinCost(int value, int divisor) => Math.Max(1, value / Math.Max(1, divisor));
+
+    /// <summary>重铸单条钱币费用（配置 RerollOneCoinDiv）。</summary>
+    private static int RerollOneCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.RerollOneCoinDiv ?? 500);
+
+    /// <summary>全部重铸钱币费用（配置 RerollAllCoinDiv）。</summary>
+    private static int RerollAllCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.RerollAllCoinDiv ?? 1000);
+
+    /// <summary>稀有度升档钱币费用（配置 UpgradeCoinDiv）。</summary>
+    private static int UpgradeCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.UpgradeCoinDiv ?? 500);
+
+    /// <summary>开槽钱币费用（配置 SocketCoinDiv）。</summary>
+    private static int SocketCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.SocketCoinDiv ?? 1000);
+
+    /// <summary>宝石升阶钱币费用（配置 GemUpgradeCoinDiv）。</summary>
+    private static int GemUpgradeCoins(int value) => CoinCost(value, LooteriaConfig.Instance?.GemUpgradeCoinDiv ?? 500);
 
     /// <summary>在 sb 上连续绘制 "数量 + 原版钱币图标"（铂/金/银/铜），返回结束 X。替代汉字单位。</summary>
     private static float DrawCoinIcons(SpriteBatch sb, DynamicSpriteFont font, float x, float y, int copper, Color textColor, float scale = 0.8f)

@@ -129,11 +129,42 @@ public class LooteriaConfig : ModConfig
     [DefaultValue(0.30f)]
     public float UpgradeRarityChance = 0.30f;
 
-    /// <summary>开槽费用（重铸之尘）：开槽 = 该值尘 + 装备价值/20 钱币 + 1 件同名装备。M15（原为完全免费）。</summary>
+    /// <summary>开槽费用（重铸之尘）：开槽 = 该值尘 + 装备价值/开槽钱币除数 钱币 + 1 件同名装备。M15（原为完全免费）。</summary>
     [Range(0, 500)]
     [Increment(5)]
     [DefaultValue(40)]
     public int SocketCostDust = 40;
+
+    // ===== 钱币花销（各项独立除数：钱币费用 = 装备价值 / 该值，最低 1 铜）=====
+    /// <summary>重铸单条钱币除数（钱币 = 装备价值 ÷ 该值）。默认 500 = 原 value/10 再 ÷50。</summary>
+    [Range(1, 10000)]
+    [Increment(50)]
+    [DefaultValue(500)]
+    public int RerollOneCoinDiv = 500;
+
+    /// <summary>全部重铸钱币除数（钱币 = 装备价值 ÷ 该值）。默认 1000 = 原 value/20 再 ÷50。</summary>
+    [Range(1, 10000)]
+    [Increment(50)]
+    [DefaultValue(1000)]
+    public int RerollAllCoinDiv = 1000;
+
+    /// <summary>稀有度升档钱币除数（钱币 = 装备价值 ÷ 该值）。默认 500 = 原 value/10 再 ÷50。</summary>
+    [Range(1, 10000)]
+    [Increment(50)]
+    [DefaultValue(500)]
+    public int UpgradeCoinDiv = 500;
+
+    /// <summary>开槽钱币除数（钱币 = 装备价值 ÷ 该值）。默认 1000 = 原 value/20 再 ÷50。</summary>
+    [Range(1, 10000)]
+    [Increment(50)]
+    [DefaultValue(1000)]
+    public int SocketCoinDiv = 1000;
+
+    /// <summary>宝石升阶钱币除数（钱币 = 宝石价值 ÷ 该值）。默认 500 = 原 value/10 再 ÷50。</summary>
+    [Range(1, 10000)]
+    [Increment(50)]
+    [DefaultValue(500)]
+    public int GemUpgradeCoinDiv = 500;
 
     /// <summary>拆解重铸之尘除数：拆解获得尘 = 力量等级 / 该值（≥1，默认 2）。</summary>
     [Range(1, 100)]

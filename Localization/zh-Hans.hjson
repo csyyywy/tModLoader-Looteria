@@ -91,7 +91,32 @@ Mods: {
 
 				SocketCostDust: {
 					Label: 开槽费用（重铸之尘）
-					Tooltip: 开槽消耗的重铸之尘（默认 40；另需装备价值/20 铜币 + 1 件同名装备）。
+					Tooltip: 开槽消耗的重铸之尘（默认 40；另需装备价值 ÷ 开槽钱币除数 钱币 + 1 件同名装备）。
+				}
+
+				RerollOneCoinDiv: {
+					Label: 重铸单条钱币除数
+					Tooltip: 重铸单条的钱币费用 = 装备价值 ÷ 该值（默认 500；调大更便宜）。
+				}
+
+				RerollAllCoinDiv: {
+					Label: 全部重铸钱币除数
+					Tooltip: 全部重铸的钱币费用 = 装备价值 ÷ 该值（默认 1000；调大更便宜）。
+				}
+
+				UpgradeCoinDiv: {
+					Label: 升档钱币除数
+					Tooltip: 稀有度升档的钱币费用 = 装备价值 ÷ 该值（默认 500；调大更便宜）。
+				}
+
+				SocketCoinDiv: {
+					Label: 开槽钱币除数
+					Tooltip: 开槽的钱币费用 = 装备价值 ÷ 该值（默认 1000；调大更便宜）。
+				}
+
+				GemUpgradeCoinDiv: {
+					Label: 宝石升阶钱币除数
+					Tooltip: 宝石升阶的钱币费用 = 宝石价值 ÷ 该值（默认 500；调大更便宜）。
 				}
 
 				EliteChance: {

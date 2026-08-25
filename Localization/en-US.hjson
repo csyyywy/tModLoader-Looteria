@@ -91,7 +91,32 @@ Mods: {
 
 				SocketCostDust: {
 					Label: Socket Cost (Reforge Dust)
-					Tooltip: Cost in Reforge Dust to open a socket (default 40; plus item value/20 copper + 1 same-name item).
+					Tooltip: Cost in Reforge Dust to open a socket (default 40; plus item value / socket coin divisor + 1 same-name item).
+				}
+
+				RerollOneCoinDiv: {
+					Label: Reroll One Coin Divisor
+					Tooltip: Coin cost of rerolling one affix = item value / this value (default 500; larger = cheaper).
+				}
+
+				RerollAllCoinDiv: {
+					Label: Reroll All Coin Divisor
+					Tooltip: Coin cost of rerolling all affixes = item value / this value (default 1000; larger = cheaper).
+				}
+
+				UpgradeCoinDiv: {
+					Label: Upgrade Coin Divisor
+					Tooltip: Coin cost of rarity upgrade = item value / this value (default 500; larger = cheaper).
+				}
+
+				SocketCoinDiv: {
+					Label: Socket Coin Divisor
+					Tooltip: Coin cost of opening a socket = item value / this value (default 1000; larger = cheaper).
+				}
+
+				GemUpgradeCoinDiv: {
+					Label: Gem Upgrade Coin Divisor
+					Tooltip: Coin cost of gem enhancement = gem value / this value (default 500; larger = cheaper).
 				}
 
 				EliteChance: {

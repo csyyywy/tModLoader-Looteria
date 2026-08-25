@@ -115,7 +115,7 @@ public partial class LooteriaUIState
             b.OnLeftClick += (_, _) =>
             {
                 if (BlockLocalCurrencyOp()) return; // R2：多人禁用重铸（尘扣费是本地改）
-                int coins = CoinCost(item.value, 10); // 花销 ÷50：原 value/10 → value/500
+                int coins = RerollOneCoins(item.value); // 钱币 = 价值 ÷ 配置除数（RerollOneCoinDiv）
                 int pay = TryPay(player, RerollOneCost, coins);
                 if (pay != 0) { Rebuild(); ShowMsg(pay == 1 ? T("NotEnoughDust") : T("NotEnoughCoins")); return; } // 演练即扣款
                 _rerollIdx = idx;
@@ -172,11 +172,11 @@ public partial class LooteriaUIState
         }
         else
         {
-            int allCoins = CoinCost(item.value, 20); // 花销 ÷50：原 value/20 → value/1000
+            int allCoins = RerollAllCoins(item.value); // 钱币 = 价值 ÷ 配置除数（RerollAllCoinDiv）
             AddCoinButton(_content, $"{T("RerollAll")} ({RerollAllCost}{T("Dust")} + ", allCoins, ref top, () =>
             {
                 if (BlockLocalCurrencyOp()) return; // R2
-                int coins = CoinCost(item.value, 20);
+                int coins = RerollAllCoins(item.value);
                 int pay = TryPay(player, RerollAllCost, coins);
                 if (pay != 0) { Rebuild(); ShowMsg(pay == 1 ? T("NotEnoughDust") : T("NotEnoughCoins")); return; } // 演练即扣款
                 _rerollAllRolls = AffixRoller.PreviewRerollAll(item, g);
@@ -189,7 +189,7 @@ public partial class LooteriaUIState
         // 升档：120 尘 + 价值/500 钱 + 1 件同名装备（自选消耗）
         if (g.Rarity < LootRarity.Set)
         {
-            int upCoins = CoinCost(item.value, 10);
+            int upCoins = UpgradeCoins(item.value); // 钱币 = 价值 ÷ 配置除数（UpgradeCoinDiv）
             AddCoinButton(_content, $"{T("Upgrade")} ({UpgradeCost}{T("Dust")} + {T("SameItem")}) + ", upCoins, ref top,
                 () => { if (BlockLocalCurrencyOp()) return; _consumeAction = _consumeAction == 1 ? 0 : 1; _rerollIdx = -1; _rerollRoll = null; _rerollAllRolls = null; Rebuild(); }, // R2
                 new Color(90, 70, 130));
@@ -210,7 +210,7 @@ public partial class LooteriaUIState
 
     private void DoUpgrade(Player player, Item item, AffixGlobalItem g, int matSlot)
     {
-        int coins = CoinCost(item.value, 10); // 花销 ÷50：原 value/10 → value/500
+        int coins = UpgradeCoins(item.value); // 钱币 = 价值 ÷ 配置除数（UpgradeCoinDiv）
         // M4：先校验后扣款（尘+钱币）；不足则什么都不动，材料保留
         int pay = TryPay(player, UpgradeCost, coins);
         if (pay != 0) { Rebuild(); ShowMsg(pay == 1 ? T("NotEnoughDust") : T("NotEnoughCoins")); return; }
