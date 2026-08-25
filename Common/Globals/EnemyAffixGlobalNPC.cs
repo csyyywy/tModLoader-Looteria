@@ -263,14 +263,9 @@ public class EnemyAffixGlobalNPC : GlobalNPC
     {
         if (!HasAffixes || player == null) return;
         if (Main.netMode == NetmodeID.MultiplayerClient) return;
-        float reflect = 0f;
-        foreach (var id in Affixes)
-            reflect = Math.Max(reflect, EnemyAffixDatabase.ThornsReflectFor(id));
-        if (reflect > 0f)
-        {
-            int dmg = Math.Max(1, (int)(damageDone * reflect));
-            player.Hurt(PlayerDeathReason.ByNPC(npc.netID), dmg, 0);
-        }
+        int thorns = ThornsDamage(npc);
+        if (thorns > 0)
+            player.Hurt(PlayerDeathReason.ByNPC(npc.netID), thorns, 0);
     }
 
     public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone)
@@ -278,16 +273,22 @@ public class EnemyAffixGlobalNPC : GlobalNPC
         if (!HasAffixes || projectile == null) return;
         if (Main.netMode == NetmodeID.MultiplayerClient) return;
         if (projectile.owner < 0 || projectile.owner >= Main.maxPlayers) return;
-        float reflect = 0f;
-        foreach (var id in Affixes)
-            reflect = Math.Max(reflect, EnemyAffixDatabase.ThornsReflectFor(id));
-        if (reflect > 0f)
-        {
-            var p = Main.player[projectile.owner];
-            if (p == null || !p.active) return;
-            int dmg = Math.Max(1, (int)(damageDone * reflect));
-            p.Hurt(PlayerDeathReason.ByNPC(npc.netID), dmg, 0);
-        }
+        var p = Main.player[projectile.owner];
+        if (p == null || !p.active) return;
+        int thorns = ThornsDamage(npc);
+        if (thorns > 0)
+            p.Hurt(PlayerDeathReason.ByNPC(npc.netID), thorns, 0);
+    }
+
+    /// <summary>荆棘固定反伤值（取该 NPC 词缀中最大的一条，× 全局倍率）。</summary>
+    private static int ThornsDamage(NPC npc)
+    {
+        if (!npc.TryGetGlobalNPC(out EnemyAffixGlobalNPC g) || !g.HasAffixes) return 0;
+        int best = 0;
+        foreach (var id in g.Affixes)
+            best = Math.Max(best, EnemyAffixDatabase.ThornsDamageFor(id));
+        if (best <= 0) return 0;
+        return Math.Max(1, (int)(best * EnemyAffixDatabase.PowerMult()));
     }
 
     // ===== 持续效果（AI）：再生 / 迅捷 / 风暴之眼 / 狂怒二阶段 =====

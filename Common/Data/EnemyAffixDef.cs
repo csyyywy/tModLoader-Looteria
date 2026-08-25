@@ -225,12 +225,12 @@ public static class EnemyAffixDatabase
         return (int)(m * PowerMult());
     }
 
-    /// <summary>荆棘反弹（近战伤害 %，0~0.9）。</summary>
-    public static float ThornsReflectFor(EnemyAffixId id) => id switch
+    /// <summary>荆棘固定反伤（不随玩家伤害放大；× PowerMult 全局倍率）。</summary>
+    public static int ThornsDamageFor(EnemyAffixId id) => id switch
     {
-        EnemyAffixId.Thorns => 0.25f,
-        EnemyAffixId.ThornsCrown => 0.50f,
-        _ => 0f,
+        EnemyAffixId.Thorns => 15,
+        EnemyAffixId.ThornsCrown => 30,
+        _ => 0,
     };
 
     /// <summary>吸血（攻击造成伤害的 % 回复自身，0~0.5）。</summary>
