@@ -550,6 +550,7 @@ Mods: {
 			ContainerTitle: 掠夺容器（点击格子 = 领取到背包）
 			Power: 力量
 			Sockets: 插槽
+			SocketsCount: 插槽: {0}
 			SocketGemSel: 宝石背包（点击选择要镶嵌的宝石）
 			SocketGemHeld: 已选
 			SocketEquipSel: 装备与插槽（先选装备，再点插槽）
@@ -588,8 +589,6 @@ Mods: {
 			CoinSilver: 银
 			CoinCopper: 铜
 			WalletCurrent: 当前
-			WalletCost: 消耗
-			WalletRemain: 剩余
 			RiftTitle: 秘境（入侵事件 · 模仿哨兵 9 分钟）
 			RiftNext: 下一层
 			RiftBest: 最佳

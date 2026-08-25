@@ -295,7 +295,8 @@ public partial class LooteriaUIState
         top += (int)(26f * scale) + 6;
     }
 
-    /// <summary>带原版钱币图标的按钮（自绘：底色 + 标签文字 + 钱币图标 + 悬停高亮）。</summary>
+    /// <summary>带原版钱币图标的按钮（自绘：底色 + 标签文字 + 钱币图标 + 悬停高亮）。
+    /// 钱币花销直接显示在按钮内（当前/消耗/剩余 摘要行已按用户要求移除，按钮内即消耗）。</summary>
     private class UICoinButton : UIElement
     {
         public string Label = "";
@@ -307,8 +308,8 @@ public partial class LooteriaUIState
         public UICoinButton(string label, int copper, Color bg, Action onClick, float scale = 0.75f)
         {
             Label = label; Copper = copper; BgColor = bg; Scale = scale;
-            Width = new StyleDimension(300f, 0f);
-            Height = new StyleDimension(30f, 0f);
+            Width = new StyleDimension(480f, 0f);
+            Height = new StyleDimension(34f, 0f);
             OnLeftClick += (_, _) => onClick();
         }
 
@@ -342,68 +343,7 @@ public partial class LooteriaUIState
             Top = new StyleDimension(top, 0f),
             Left = new StyleDimension(8f, 0f)
         });
-        top += 36;
-    }
-
-    /// <summary>钱包摘要行：当前 / 消耗 / 剩余（三组原版钱币图标）。参照原版商店的"你支付/找零"展示。</summary>
-    private class UIWalletLine : UIElement
-    {
-        public string CurrentLabel = "";
-        public long Current;
-        public string CostLabel = "";
-        public long Cost;
-        public string RemainLabel = "";
-        public long Remain;
-        public Color Color = Color.LightGray;
-
-        public UIWalletLine(string curLabel, long cur, string costLabel, long cost, string remainLabel, long remain, Color color)
-        {
-            CurrentLabel = curLabel; Current = cur;
-            CostLabel = costLabel; Cost = cost;
-            RemainLabel = remainLabel; Remain = remain;
-            Color = color;
-            Width = new StyleDimension(600f, 0f);
-            Height = new StyleDimension(28f, 0f);
-        }
-
-        protected override void DrawSelf(SpriteBatch sb)
-        {
-            base.DrawSelf(sb);
-            var d = GetDimensions();
-            var font = FontAssets.MouseText.Value;
-            float y = d.Y + 4f;
-            float x = d.X;
-            float scale = 0.75f;
-            // 当前
-            x = DrawSegment(sb, font, x, y, CurrentLabel, Current, scale);
-            // 消耗
-            x = DrawSegment(sb, font, x, y, CostLabel, Cost, scale);
-            // 剩余
-            DrawSegment(sb, font, x, y, RemainLabel, Remain, scale);
-        }
-
-        private float DrawSegment(SpriteBatch sb, DynamicSpriteFont font, float x, float y, string label, long copper, float scale)
-        {
-            if (label.Length > 0)
-            {
-                Utils.DrawBorderStringFourWay(sb, font, label, x, y, Color, Color.Black, Vector2.Zero, scale);
-                x += font.MeasureString(label).X * scale + 2f;
-            }
-            x = DrawCoinIcons(sb, font, x, y, (int)Math.Clamp(copper, 0, int.MaxValue), Color, scale);
-            x += 10f;
-            return x;
-        }
-    }
-
-    /// <summary>添加钱包摘要行：当前 / 消耗 / 剩余（原版钱币图标）。</summary>
-    private static void AddWalletLine(UIPanel panel, string curLabel, long cur, string costLabel, long cost, string remainLabel, long remain, ref int top, Color color)
-    {
-        panel.Append(new UIWalletLine(curLabel, cur, costLabel, cost, remainLabel, remain, color)
-        {
-            Top = new StyleDimension(top, 0f),
-            Left = new StyleDimension(8f, 0f)
-        });
-        top += 32;
+        top += 40;
     }
 
     /// <summary>强调色分隔线。</summary>

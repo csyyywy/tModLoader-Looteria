@@ -1,10 +1,15 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using Terraria.UI.Chat;
 using global::Looteria.Common.Data;
 using global::Looteria.Common.Effects;
 using global::Looteria.Common.Players;
@@ -294,5 +299,116 @@ public class AffixGlobalItem : GlobalItem
         SetThemeId = -1;
         Tier = 0;
         PowerScore = 0;
+    }
+
+    // ===== tooltip 宝石插槽图标（自绘，自动换行）=====
+    // 需求：选中物品的悬浮框（原版 tooltip）里，插槽栏位用"能自动换行的图标"显示已镶嵌的宝石。
+    // 实现（TooltipBuilder 注入两条行）：
+    //   1) "LooteriaSockets" 表头："插槽: N"
+    //   2) "LooteriaSocketIcons" 占位行（文本 = iconRows 个 '\n'）——tooltip 背景框尺寸在
+    //      ModifyTooltips 之后只按文本行高度测量，占位行让框真实长高、把图标区包进框内。
+    // 本类 PostDrawTooltip 找到占位行的 (X, Y) 作为图标区锚点（天然跟随 tooltip 换行布局），
+    // 逐格绘制：原版宝石物品贴图、每行 6 个自动换行、空槽灰框、右上角 +N 强化角标。
+
+    private const int IconSize = 24;
+    private const int IconGap = 4;
+    private const int IconPerRow = 6;
+    private const float IconScale = 0.85f;
+
+    /// <summary>本次 tooltip 绘制中图标区是否有效（防串帧）。</summary>
+    private bool _socketIconValid;
+
+    public override bool PreDrawTooltip(Item item, ReadOnlyCollection<TooltipLine> lines, ref int x, ref int y)
+    {
+        _socketIconValid = HasAffix && SocketCount > 0;
+        return true;
+    }
+
+    public override void PostDrawTooltip(Item item, ReadOnlyCollection<DrawableTooltipLine> lines)
+    {
+        if (!_socketIconValid || SocketCount <= 0 || Sockets == null) return;
+        // 找占位行（LooteriaSocketIcons）的绘制位置
+        DrawableTooltipLine? place = null;
+        foreach (var l in lines)
+        {
+            if (l.Mod == Mod.Name && l.Name == "LooteriaSocketIcons") { place = l; break; }
+        }
+        if (place == null) return;
+
+        // 占位行文本 = iconRows 个 '\n'，每个换行占一行行高 → 图标区按行高分布、绝不溢出 tooltip 框。
+        float lineH = place.Font.LineSpacing;
+        float iconH = Math.Min(IconSize, lineH - 4f);   // 图标高度缩进行内
+        float iconW = iconH;
+        float cellW = iconH + IconGap;                   // 每格宽度（图标 + 间距）
+
+        int shown = 0;
+        for (int i = 0; i < SocketCount; i++)
+        {
+            int row = shown / IconPerRow;
+            int col = shown % IconPerRow;
+            float cx = place.X + col * cellW;
+            float cy = place.Y + row * lineH + (lineH - iconH) / 2f; // 垂直居中在行内
+
+            int sockVal = (i < Sockets.Count) ? Sockets[i] : 0;
+            int gemId = sockVal % 1000;
+            int gemUp = sockVal / 1000;
+
+            if (gemId > 0)
+            {
+                // 宝石图标：原版同名宝石物品贴图（宝石 id 与其颜色一一对应）。
+                int vType = Content.Items.Gems.GemItemHelper.VanillaGemType(GemDatabase.GetType(gemId));
+                if (vType > 0)
+                {
+                    Main.instance.LoadItem(vType);
+                    var tex = TextureAssets.Item[vType].Value;
+                    float scale = iconH / (float)tex.Height;
+                    Main.spriteBatch.Draw(tex,
+                        new Vector2(cx, cy),
+                        null, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                    // 右上角强化值 +N
+                    if (gemUp > 0)
+                    {
+                        string up = "+" + gemUp;
+                        var font = FontAssets.ItemStack.Value;
+                        var sz = font.MeasureString(up);
+                        Utils.DrawBorderStringFourWay(Main.spriteBatch, font, up,
+                            cx + iconW - sz.X * IconScale,
+                            cy - 4f,
+                            Color.Orange, Color.Black, Vector2.Zero, IconScale);
+                    }
+                }
+                else
+                {
+                    DrawEmptySocket(cx, cy, iconH);
+                }
+            }
+            else
+            {
+                DrawEmptySocket(cx, cy, iconH);
+            }
+            shown++;
+        }
+    }
+
+    private void DrawEmptySocket(float cx, float cy, float size)
+    {
+        var px = TextureAssets.MagicPixel.Value;
+        int s = (int)size;
+        var r = new Rectangle((int)cx, (int)cy, s, s);
+        Main.spriteBatch.Draw(px, r, new Color(30, 34, 50) * 0.9f);
+        // 槽框
+        var border = new Color(90, 105, 150) * 0.8f;
+        Main.spriteBatch.Draw(px, new Rectangle(r.X, r.Y, r.Width, 2), border);
+        Main.spriteBatch.Draw(px, new Rectangle(r.X, r.Bottom - 2, r.Width, 2), border);
+        Main.spriteBatch.Draw(px, new Rectangle(r.X, r.Y, 2, r.Height), border);
+        Main.spriteBatch.Draw(px, new Rectangle(r.Right - 2, r.Y, 2, r.Height), border);
+        // 槽内"◇"占位
+        var font = FontAssets.MouseText.Value;
+        string mark = "◇";
+        var sz = font.MeasureString(mark);
+        Utils.DrawBorderStringFourWay(Main.spriteBatch, font, mark,
+            cx + size / 2f - sz.X / 2f,
+            cy + size / 2f - sz.Y / 2f,
+            new Color(120, 135, 170), Color.Black, Vector2.Zero, 0.8f);
     }
 }

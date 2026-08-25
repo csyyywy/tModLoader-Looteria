@@ -31,28 +31,17 @@ public static class TooltipBuilder
             }
         }
 
-        // 插槽（逐个显示：◆ 宝石名 +N 强化 或 ◇ 空槽）
+        // 插槽（表头行：槽位数 + 图标预留行）。
+        // 图标本身由 AffixGlobalItem.PostDrawTooltip 自绘（原版宝石物品图标、自动换行、空槽灰框、+N 强化角标）。
+        // 预留行 = 每 6 个一行的换行占位，让 tooltip 背景框包住图标区（box 尺寸在 PreDrawTooltip 前已按文本测出，
+        // 唯一能扩框的办法就是加入真实高度的文本行——多行 '\n' 会被 MeasureString 计为多行高度）。
         if (g.SocketCount > 0)
         {
-            string s = "";
-            for (int i = 0; i < g.SocketCount; i++)
-            {
-                int sockVal = (g.Sockets != null && i < g.Sockets.Count) ? g.Sockets[i] : 0;
-                if (sockVal > 0)
-                {
-                    int gemId = sockVal % 1000;
-                    int gemUp = sockVal / 1000;
-                    s += "◆ " + Language.GetTextValue(GemDatabase.Key(gemId))
-                       + (gemUp > 0 ? $" +{gemUp}" : "");
-                }
-                else
-                {
-                    s += "◇";
-                }
-                if (i < g.SocketCount - 1) s += "\n";
-            }
             tooltips.Add(new TooltipLine(mod, "LooteriaSockets",
-                Language.GetTextValue("Mods.Looteria.UI.Sockets", s)) { OverrideColor = Color.DeepSkyBlue });
+                Language.GetTextValue("Mods.Looteria.UI.SocketsCount", g.SocketCount)) { OverrideColor = Color.DeepSkyBlue });
+            int iconRows = (g.SocketCount + 5) / 6;
+            if (iconRows > 0)
+                tooltips.Add(new TooltipLine(mod, "LooteriaSocketIcons", new string('\n', iconRows)));
         }
 
         // 传说之力

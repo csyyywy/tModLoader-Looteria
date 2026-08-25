@@ -550,6 +550,7 @@ Mods: {
 			ContainerTitle: Loot Container (click a slot = claim to inventory)
 			Power: Power
 			Sockets: Sockets
+			SocketsCount: Sockets: {0}
 			SocketGemSel: Gem bag (click a gem to select for socketing)
 			SocketGemHeld: Selected
 			SocketEquipSel: Equipment & sockets (pick an item, then click a socket)
@@ -588,8 +589,6 @@ Mods: {
 			CoinSilver: s
 			CoinCopper: c
 			WalletCurrent: Now
-			WalletCost: Cost
-			WalletRemain: Left
 			RiftTitle: Rift (invasion · 9 min like Frost Moon)
 			RiftNext: Next
 			RiftBest: Best

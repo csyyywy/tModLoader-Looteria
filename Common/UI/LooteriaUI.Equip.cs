@@ -97,28 +97,17 @@ public partial class LooteriaUIState
         AddSectionTitle(_content, $"{item.Name} · {T("Power")} {g.PowerScore}", RarityInfo.Colors[Math.Clamp((int)g.Rarity, 0, RarityInfo.Count - 1)], ref top); // M14
         AddCoinLabel(_content, $"{T("Value")}: ", item.value, ref top, 0.8f, Color.LightGray); // 原版钱币图标（含铂金）
 
-        // 钱包摘要：当前 / 消耗（重铸单条）/ 剩余（参照原版商店展示）
+        // 当前钱币（你身上+银行全部，同原版商店口径）；消耗已写在各操作按钮内
         long wallet = PlayerCoins(player);
-        int demoCost = RerollOneCoins(item.value);
-        AddWalletLine(_content, T("WalletCurrent"), wallet, T("WalletCost"), demoCost, T("WalletRemain"),
-            Math.Max(0, wallet - demoCost), ref top, Color.LightGray);
+        AddCoinLabel(_content, $"{T("WalletCurrent")}: ", (int)Math.Min(wallet, int.MaxValue), ref top, 0.8f, Color.LightGray);
 
-        // 词缀列表：每条右侧一个"重铸"按钮（点击即扣款，进入演练，未确认不生效）
+        // 词缀列表：每条右侧一个"重铸"按钮（按钮内显示钱币花销；点击即扣款，进入演练，未确认不生效）
         AddSectionTitle(_content, T("RerollAffixes"), C_Cyan, ref top);
         for (int i = 0; i < g.Affixes!.Count; i++)
         {
             int idx = i;
             AddLabel(_content, $"{i + 1}. {FormatAffixLine(g, i)}", ref top, 0.8f, new Color(255, 200, 0));
-            var b = new UITextPanel<string>(T("RerollOne"), 0.7f)
-            {
-                Top = new StyleDimension(top, 0f),
-                Left = new StyleDimension(430f, 0f),
-                Width = new StyleDimension(84f, 0f),
-                Height = new StyleDimension(24f, 0f)
-            };
-            b.BackgroundColor = new Color(60, 90, 150);
-            b.WithFadedMouseOver();
-            b.OnLeftClick += (_, _) =>
+            var b = new UICoinButton(T("RerollOne"), RerollOneCoins(item.value), new Color(60, 90, 150), () =>
             {
                 if (BlockLocalCurrencyOp()) return; // R2：多人禁用重铸（尘扣费是本地改）
                 int coins = RerollOneCoins(item.value); // 钱币 = 价值 ÷ 配置除数（RerollOneCoinDiv）
@@ -129,9 +118,15 @@ public partial class LooteriaUIState
                 _rerollAllRolls = null;
                 _consumeAction = 0;
                 Rebuild();
+            })
+            {
+                Top = new StyleDimension(top, 0f),
+                Left = new StyleDimension(430f, 0f),
+                Width = new StyleDimension(220f, 0f),
+                Height = new StyleDimension(30f, 0f)
             };
             _content.Append(b);
-            top += 26;
+            top += 34;
         }
         top += 6;
 
