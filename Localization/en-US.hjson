@@ -86,8 +86,11 @@ Mods: {
 
 				AffixValueOverrides: {
 					Label: Affix Value Overrides
-					Tooltip: Per-affix numeric multiplier overrides. key = affix English Key (e.g. Strong/Berserk/Thorns), value = multiplier (0 = default).
-					Example: {"Strong": 3} → Strong life bonus ×3; {"Thorns": 0} → disable thorns reflect. Applies to life/damage/defense/DR/thorns/lifesteal/regen/speed/explosion/split values.
+					Tooltip:
+						'''
+						Per-affix numeric multiplier overrides. key = affix English Key (e.g. Strong/Berserk/Thorns), value = multiplier (0 = default).
+						Example: {"Strong": 3} → Strong life bonus ×3; {"Thorns": 0} → disable thorns reflect. Applies to life/damage/defense/DR/thorns/lifesteal/regen/speed/explosion/split values.
+						'''
 				}
 			}
 

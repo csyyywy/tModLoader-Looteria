@@ -86,8 +86,11 @@ Mods: {
 
 				AffixValueOverrides: {
 					Label: 词缀数值覆盖
-					Tooltip: 逐词缀数值倍率覆盖。key = 词缀英文 Key（如 Strong/Berserk/Thorns），value = 倍率（0 = 默认）。
-					例：{"Strong": 3} → 强壮生命加成 ×3；{"Thorns": 0} → 关掉荆棘反伤。适用于生命/伤害/防御/减伤/荆棘/吸血/再生/移速/爆炸/分裂数值。
+					Tooltip:
+						'''
+						逐词缀数值倍率覆盖。key = 词缀英文 Key（如 Strong/Berserk/Thorns），value = 倍率（0 = 默认）。
+						例：{"Strong": 3} → 强壮生命加成 ×3；{"Thorns": 0} → 关掉荆棘反伤。适用于生命/伤害/防御/减伤/荆棘/吸血/再生/移速/爆炸/分裂数值。
+						'''
 				}
 			}
 
