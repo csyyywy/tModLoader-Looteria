@@ -135,7 +135,8 @@ public class CharacterSheetUI : UIState
             _equip.Append(held);
         }
 
-        // ===== 中上：人物立绘 =====
+        // ===== 中上：人物立绘（UseImmediateMode 必须 true：1.4.4 UI 里 DrawPlayer 在
+        // Deferred 批次下会被界面队列盖住——见 tCF "Characters being drawn behind interface"）=====
         _portraitPanel = MakePanel(PORTRAIT_X, PORTRAIT_W, height: new StyleDimension(PORTRAIT_H, 0f));
         _root.Append(_portraitPanel);
 
@@ -268,25 +269,23 @@ public class CharacterSheetUI : UIState
         top += 56;
     }
 
-    /// <summary>属性行（放入滚动列表）：图标 + 名称/值，同 top 横向并排（不用 VAlign）。</summary>
+    /// <summary>属性行（放入滚动列表）：图标 + 名称/值，同一行精确像素对齐（不用 VAlign、不用 UIImage 缩放）。</summary>
     private static UIElement StatRow(string iconKey, string text, Color color, string tooltip = "", float h = 22f)
     {
         var row = new UIElement { Width = new StyleDimension(488f, 0f), Height = new StyleDimension(h, 0f) };
-        var img = new UIImage(StatIcon(iconKey))
+        // 图标：自定义绘制，等比缩放进 18x18 盒，与文字行顶对齐
+        row.Append(new IconElement(StatIcon(iconKey))
         {
-            Top = new StyleDimension(0f, 0f),
+            Top = new StyleDimension(2f, 0f),
             Left = new StyleDimension(2f, 0f),
-            Width = new StyleDimension(20f, 0f),
-            Height = new StyleDimension(20f, 0f)
-        };
-        img.ImageScale = 0.65f;
-        img.AllowResizingDimensions = false;
-        row.Append(img);
+            Width = new StyleDimension(18f, 0f),
+            Height = new StyleDimension(18f, 0f)
+        });
 
         var txt = new UIText(text, 0.68f)
         {
-            Top = new StyleDimension(1f, 0f),
-            Left = new StyleDimension(26f, 0f),
+            Top = new StyleDimension(3f, 0f),
+            Left = new StyleDimension(25f, 0f),
             TextColor = color
         };
         row.Append(txt);
@@ -294,6 +293,25 @@ public class CharacterSheetUI : UIState
         if (tooltip.Length > 0)
             row.OnMouseOver += (_, _) => { Main.LocalPlayer.mouseInterface = true; Main.instance.MouseText(tooltip); };
         return row;
+    }
+
+    /// <summary>图标元素：等比缩放居中绘制（无 UIImage 的 ImageScale 中心偏移）。</summary>
+    private sealed class IconElement : UIElement
+    {
+        private readonly Asset<Texture2D> _tex;
+        public IconElement(Asset<Texture2D> tex) => _tex = tex;
+
+        protected override void DrawSelf(SpriteBatch sb)
+        {
+            base.DrawSelf(sb);
+            var tex = _tex?.Value;
+            if (tex == null) return;
+            var d = GetDimensions();
+            if (d.Width <= 0f || d.Height <= 0f) return;
+            float sc = MathF.Min(d.Width / tex.Width, d.Height / tex.Height);
+            var size = tex.Size() * sc;
+            sb.Draw(tex, d.Center() - size * 0.5f, null, Color.White, 0f, Vector2.Zero, sc, SpriteEffects.None, 0f);
+        }
     }
 
     private static UIElement SectionRow(string title, float h = 22f)
@@ -341,6 +359,8 @@ public class CharacterSheetUI : UIState
         };
         scrollbar.SetView(100f, 1000f);
         list.SetScrollbar(scrollbar);
+        // UIList 默认用 CompareTo(=0 恒等) 排序：List.Sort 不稳定，行序会被打乱 —— 必须禁用排序保持添加顺序
+        list.ManualSortMethod = _ => { };
         _stats.Append(list);
 
         // ===== 总览 =====
@@ -405,46 +425,46 @@ public class CharacterSheetUI : UIState
     }
 
     /// <summary>
-    /// 角色肖像：真实玩家渲染（配方与原版 UICharacter 一致）。
-    /// DrawPlayer 的 position = 玩家碰撞盒【左上角】的【世界坐标】，
-    /// 层内绘制时再 -Main.screenPosition 回到屏幕坐标，因此 UI 侧传 左上角+screenPosition。
-    /// 缩放锚点=碰撞盒底部中心（feet），所以把碰撞盒底部放到盒子底边，放大时向上长。
+    /// 角色肖像：真实玩家渲染。
+    /// · UseImmediateMode = true（必需）：1.4.4 的 DrawPlayer 内部经 Main.spriteBuffer 原始绘制，
+    ///   在 Deferred 批次下绘制顺序错乱（被界面背景盖住）——原版 UICharacter 也设了 ImmediateMode。
+    /// · DrawPlayer 的 position = 碰撞盒【左上角】的【世界坐标】（UI 坐标 + screenPosition，层内再减回）。
+    /// · 缩放锚点 = 碰撞盒底部中心（feet），因此把碰撞盒底部放到盒子底边，放大时向上长。
+    /// · 视觉克隆（clientClone）：不动真玩家的装备/增益；isDisplayDollOrInanimate 全亮。
     /// </summary>
     private class PortraitElement : UIElement
     {
+        public PortraitElement()
+        {
+            UseImmediateMode = true;
+        }
+
         protected override void DrawSelf(SpriteBatch sb)
         {
             base.DrawSelf(sb);
+            var d = GetDimensions();
+            if (d.Width < 20f || d.Height < 20f) return;
+
             var player = Main.LocalPlayer;
             if (player == null) return;
 
-            var d = GetDimensions();
-            if (d.Width < 10f || d.Height < 10f) return;
+            // 视觉克隆：不动真玩家的装备/增益状态（逐帧刷新）
+            var p = player.clientClone();
+            p.dead = false;
+            p.isDisplayDollOrInanimate = true; // 全亮肤色 + 无视隐身穿插
 
-            float scale = MathF.Min(d.Width / 44f, d.Height / 52f); // scale1 时人物约 20x44
-            bool oldDoll = player.isDisplayDollOrInanimate;
-            player.isDisplayDollOrInanimate = true; // 全亮 + 无视隐身穿插
+            float s = MathF.Max(2f, (d.Height - 24f) / 56f); // scale1 时人物约 20x56（含头）
+            var pos = new Vector2(
+                d.X + d.Width * 0.5f - p.width * 0.5f,
+                d.Y + d.Height - 10f - p.height);
 
-            Item? held = null;
-            bool hadItem = !player.inventory[player.selectedItem].IsAir;
             try
             {
-                if (hadItem) held = player.inventory[player.selectedItem];
-                if (held != null) player.inventory[player.selectedItem] = new Item(); // 空手（不画手持物品）
-
-                var pos = new Vector2(
-                    d.X + d.Width * 0.5f - player.width * 0.5f,
-                    d.Y + d.Height - 8f - player.height);
-                Main.PlayerRenderer.DrawPlayer(Main.Camera, player, pos + Main.screenPosition, 0f, Vector2.Zero, 0f, scale);
+                Main.PlayerRenderer.DrawPlayer(Main.Camera, p, pos + Main.screenPosition, 0f, Vector2.Zero, 0f, s);
             }
             catch (Exception e)
             {
                 global::Looteria.Looteria.Instance?.Logger.Error("PortraitElement draw failed", e);
-            }
-            finally
-            {
-                if (held != null) player.inventory[player.selectedItem] = held;
-                player.isDisplayDollOrInanimate = oldDoll;
             }
         }
     }
