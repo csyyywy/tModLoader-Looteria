@@ -437,20 +437,12 @@ public class EnemyAffixGlobalNPC : GlobalNPC
     {
         if (HasAffixes && Affixes.Count > 0 && npc.life > 0)
         {
-            // ==== 调试探针：有词缀怪且血条在画 → 日志 + 品红矩形（屏幕中心）====
+            // 调试日志：确认钩子触发（词缀数 / 模式 / 血条世界坐标）
             if (Main.netMode != NetmodeID.Server)
             {
                 try
                 {
-                    if (Main.myPlayer >= 0)
-                    {
-                        Mod.Logger.Info($"[AFFIXPROBE] DrawHealthBar hook fired: npc={npc.FullName} affixes={Affixes.Count} mode={EnemyAffixConfig.Instance?.AffixDisplayMode} hbPos={position}");
-                        Main.QueueMainThreadAction(() =>
-                        {
-                            var tex = TextureAssets.MagicPixel.Value;
-                            Main.spriteBatch.Draw(tex, new Rectangle((int)(Main.screenWidth / 2f) - 100, (int)(Main.screenHeight / 2f) - 100, 200, 200), Color.Magenta);
-                        });
-                    }
+                    Mod.Logger.Info($"[AFFIXPROBE] hook fired: npc={npc.FullName} affixes={Affixes.Count} mode={EnemyAffixConfig.Instance?.AffixDisplayMode} hbPos={position}");
                 }
                 catch { }
             }
@@ -461,8 +453,9 @@ public class EnemyAffixGlobalNPC : GlobalNPC
                 if (npc.boss || EnemyAffixDatabase.RarityOf(Affixes[0]) == EnemyAffixRarity.BossExclusive)
                     labelScale = 1.5f;
 
+                // 血条绘制跑在 UIScaleMatrix 批次；position 是世界坐标 → 手动减 screenPosition 转屏幕坐标
                 float barTop = position.Y;
-                float y = barTop + 36f * labelScale + 4f;
+                float y = barTop - Main.screenPosition.Y + 36f * labelScale + 4f;
 
                 var font = FontAssets.MouseText.Value;
                 string line = "";
@@ -488,11 +481,11 @@ public class EnemyAffixGlobalNPC : GlobalNPC
         return null; // 保留原版血条
     }
 
-    /// <summary>绘制一行词缀标签（世界坐标；血条绘制时的 Main.Transform 矩阵自动变换）。</summary>
+    /// <summary>绘制一行词缀标签（屏幕坐标；UIScaleMatrix 批次）。</summary>
     private static void DrawLabelLine(ReLogic.Graphics.DynamicSpriteFont font, string line, float barCenterX, ref float y, float scale)
     {
         Vector2 size = font.MeasureString(line) * scale;
-        float x = barCenterX - size.X / 2f;
+        float x = barCenterX - Main.screenPosition.X - size.X / 2f;
         Utils.DrawBorderStringFourWay(Main.spriteBatch, font, line, x, y, Color.White, Color.Black * 0.8f, Vector2.Zero, scale);
         y += size.Y + 2f;
     }
