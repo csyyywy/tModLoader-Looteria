@@ -437,16 +437,6 @@ public class EnemyAffixGlobalNPC : GlobalNPC
     {
         if (HasAffixes && Affixes.Count > 0 && npc.life > 0)
         {
-            // 调试日志：确认钩子触发（词缀数 / 模式 / 血条世界坐标）
-            if (Main.netMode != NetmodeID.Server)
-            {
-                try
-                {
-                    Mod.Logger.Info($"[AFFIXPROBE] hook fired: npc={npc.FullName} affixes={Affixes.Count} mode={EnemyAffixConfig.Instance?.AffixDisplayMode} hbPos={position}");
-                }
-                catch { }
-            }
-
             if (EnemyAffixConfig.Instance is { AffixDisplayMode: AffixDisplayMode.UnderHealthBar })
             {
                 float labelScale = scale;
@@ -455,39 +445,48 @@ public class EnemyAffixGlobalNPC : GlobalNPC
 
                 // 血条绘制跑在 UIScaleMatrix 批次；position 是世界坐标 → 手动减 screenPosition 转屏幕坐标
                 float barTop = position.Y;
-                float y = barTop - Main.screenPosition.Y + 36f * labelScale + 4f;
+                float y = barTop - Main.screenPosition.Y + 36f * labelScale - 12f; // 血条下方 20px 处
 
                 var font = FontAssets.MouseText.Value;
-                string line = "";
+                var line = new List<(string txt, Color color)>();
                 float lineW = 0f;
                 foreach (var id in Affixes)
                 {
                     string txt = Language.GetTextValue("Mods.Looteria.EnemyAffix." + EnemyAffixDatabase.Key(id));
                     if (string.IsNullOrEmpty(txt)) continue;
-                    Vector2 size = font.MeasureString(txt) * labelScale;
-                    if (line.Length > 0 && lineW + size.X > 250f * labelScale)
+                    float w = font.MeasureString(txt).X * labelScale;
+                    if (line.Count > 0 && lineW + w > 250f * labelScale)
                     {
                         DrawLabelLine(font, line, position.X, ref y, labelScale);
-                        line = "";
+                        line.Clear();
                         lineW = 0f;
                     }
-                    line += (line.Length > 0 ? "  " : "") + txt;
-                    lineW += size.X + (lineW > 0f ? 12f * labelScale : 0f);
+                    line.Add((txt, EnemyAffixDatabase.LabelColor(id)));
+                    lineW += w + (lineW > 0f ? 12f * labelScale : 0f);
                 }
-                if (line.Length > 0)
+                if (line.Count > 0)
                     DrawLabelLine(font, line, position.X, ref y, labelScale);
             }
         }
         return null; // 保留原版血条
     }
 
-    /// <summary>绘制一行词缀标签（屏幕坐标；UIScaleMatrix 批次）。</summary>
-    private static void DrawLabelLine(ReLogic.Graphics.DynamicSpriteFont font, string line, float barCenterX, ref float y, float scale)
+    /// <summary>绘制一行词缀标签（屏幕坐标；UIScaleMatrix 批次），每个词缀用各自颜色。</summary>
+    private static void DrawLabelLine(ReLogic.Graphics.DynamicSpriteFont font, List<(string txt, Color color)> line, float barCenterX, ref float y, float scale)
     {
-        Vector2 size = font.MeasureString(line) * scale;
-        float x = barCenterX - Main.screenPosition.X - size.X / 2f;
-        Utils.DrawBorderStringFourWay(Main.spriteBatch, font, line, x, y, Color.White, Color.Black * 0.8f, Vector2.Zero, scale);
-        y += size.Y + 2f;
+        // 先算整行总宽，居中于血条
+        float totalW = 0f;
+        foreach (var (txt, _) in line)
+            totalW += font.MeasureString(txt).X * scale;
+        totalW += (line.Count - 1) * 12f * scale;
+
+        float x = barCenterX - Main.screenPosition.X - totalW / 2f;
+        foreach (var (txt, color) in line)
+        {
+            Utils.DrawBorderStringFourWay(Main.spriteBatch, font, txt, x, y, color, Color.Black * 0.8f, Vector2.Zero, scale);
+            x += font.MeasureString(txt).X * scale + 12f * scale;
+        }
+        y += font.MeasureString(line[0].txt).Y * scale + 2f;
     }
 
     public override void ModifyTypeName(NPC npc, ref string typeName)
