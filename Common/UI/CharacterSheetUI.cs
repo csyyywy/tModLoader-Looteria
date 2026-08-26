@@ -431,12 +431,16 @@ public class CharacterSheetUI : UIState
     /// · DrawPlayer 的 position = 碰撞盒【左上角】的【世界坐标】（UI 坐标 + screenPosition，层内再减回）。
     /// · 缩放锚点 = 碰撞盒底部中心（feet），因此把碰撞盒底部放到盒子底边，放大时向上长。
     /// · 视觉克隆（clientClone）：不动真玩家的装备/增益；isDisplayDollOrInanimate 全亮。
+    /// · Main.CurrentPlayerOverride：tML 的渲染管线（染料/槽位等）读 Main.CurrentPlayer，
+    ///   必须把克隆临时设为 CurrentPlayer——原版 UICharacter 的 tML 补丁正是这么做的。
+    /// · OverrideSamplerState = PointClamp：与 UICharacter 一致。
     /// </summary>
     private class PortraitElement : UIElement
     {
         public PortraitElement()
         {
             UseImmediateMode = true;
+            OverrideSamplerState = SamplerState.PointClamp;
         }
 
         protected override void DrawSelf(SpriteBatch sb)
@@ -448,19 +452,28 @@ public class CharacterSheetUI : UIState
             var player = Main.LocalPlayer;
             if (player == null) return;
 
-            // 视觉克隆：不动真玩家的装备/增益状态（逐帧刷新）
-            var p = player.clientClone();
-            p.dead = false;
-            p.isDisplayDollOrInanimate = true; // 全亮肤色 + 无视隐身穿插
+            // 视觉克隆：不动真玩家的装备/增益状态（clientClone 内部缓存复用 Player 实例）
+            var clone = player.clientClone();
+            clone.dead = false;
+            clone.isDisplayDollOrInanimate = true; // 全亮肤色 + 无视隐身穿插
 
             float s = MathF.Max(2f, (d.Height - 24f) / 56f); // scale1 时人物约 20x56（含头）
             var pos = new Vector2(
-                d.X + d.Width * 0.5f - p.width * 0.5f,
-                d.Y + d.Height - 10f - p.height);
+                d.X + d.Width * 0.5f - clone.width * 0.5f,
+                d.Y + d.Height - 10f - clone.height);
 
             try
             {
-                Main.PlayerRenderer.DrawPlayer(Main.Camera, p, pos + Main.screenPosition, 0f, Vector2.Zero, 0f, s);
+                using var _currentPlr = new Main.CurrentPlayerOverride(clone);
+                clone.ResetEffects();
+                clone.ResetVisibleAccessories();
+                clone.UpdateMiscCounter();
+                clone.UpdateDyes();
+                clone.PlayerFrame();
+
+                // 位置 = 世界坐标（UI 坐标 + screenPosition；层内 DrawData 再减回 screenPosition）
+                // 注意：UseImmediateMode 已在外层做好 Begin(Immediate)/End 包裹，这里不要再手动 Begin。
+                Main.PlayerRenderer.DrawPlayer(Main.Camera, clone, pos + Main.screenPosition, 0f, Vector2.Zero, 0f, s);
             }
             catch (Exception e)
             {
