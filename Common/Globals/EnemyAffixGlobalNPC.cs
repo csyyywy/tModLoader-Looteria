@@ -432,17 +432,31 @@ public class EnemyAffixGlobalNPC : GlobalNPC
 
     // ===== 名字前缀 / 染色（客户端也执行，纯表现）=====
 
-    /// <summary>
-    /// 血条绘制钩子：在敌人血条下方渲染词缀标签（每条一行，按词缀上色）。
-    /// 返回 null 保留原版血条；标签随血条显示（血条出现才画，血条隐藏不画）。
-    /// </summary>
+    /// <summary>血条绘制钩子：在敌人血条下方渲染词缀标签（每条一行，按词缀上色）。</summary>
     public override bool? DrawHealthBar(NPC npc, byte hbPosition, ref float scale, ref Vector2 position)
     {
         if (HasAffixes && Affixes.Count > 0 && npc.life > 0)
         {
+            // ==== 调试探针：有词缀怪且血条在画 → 日志 + 品红矩形（屏幕中心）====
+            if (Main.netMode != NetmodeID.Server)
+            {
+                try
+                {
+                    if (Main.myPlayer >= 0)
+                    {
+                        Mod.Logger.Info($"[AFFIXPROBE] DrawHealthBar hook fired: npc={npc.FullName} affixes={Affixes.Count} mode={EnemyAffixConfig.Instance?.AffixDisplayMode} hbPos={position}");
+                        Main.QueueMainThreadAction(() =>
+                        {
+                            var tex = TextureAssets.MagicPixel.Value;
+                            Main.spriteBatch.Draw(tex, new Rectangle((int)(Main.screenWidth / 2f) - 100, (int)(Main.screenHeight / 2f) - 100, 200, 200), Color.Magenta);
+                        });
+                    }
+                }
+                catch { }
+            }
+
             if (EnemyAffixConfig.Instance is { AffixDisplayMode: AffixDisplayMode.UnderHealthBar })
             {
-                // 用血条绘制参数定位：position 是世界坐标（血条中心 X / 顶部 Y）
                 float labelScale = scale;
                 if (npc.boss || EnemyAffixDatabase.RarityOf(Affixes[0]) == EnemyAffixRarity.BossExclusive)
                     labelScale = 1.5f;
