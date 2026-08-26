@@ -48,7 +48,7 @@ public class CharacterSheetUI : UIState
     private const float PORTRAIT_H = 0.54f;    // 肖像面板高 = root 高的 54%（余下给坐骑/宠物）
     private const float MOUNT_H = 184f;
     private const float ACC_X = 448f, ACC_W = 92f;
-    private const float STATS_X = 496f, STATS_W = 584f; // 左移左边框 56px（=一个物品框），右缘仍贴 1080（496+584）
+    private const float STATS_X = 552f, STATS_W = 472f; // 中心 788 不变；左右各收窄 56px（总减 112）
 
     private UIPanel _root = null!;
     private UIPanel _equip = null!;
@@ -259,7 +259,7 @@ public class CharacterSheetUI : UIState
     /// <summary>属性行（放入滚动列表）：图标 + 名称/值，同一行精确像素对齐（不用 VAlign、不用 UIImage 缩放）。</summary>
     private static UIElement StatRow(string iconKey, string text, Color color, string tooltip = "", float h = 22f)
     {
-        var row = new UIElement { Width = new StyleDimension(544f, 0f), Height = new StyleDimension(h, 0f) };
+        var row = new UIElement { Width = new StyleDimension(432f, 0f), Height = new StyleDimension(h, 0f) };
         // 图标：自定义绘制，等比缩放进 18x18 盒；Top=-6 = 相对原来上移 8px
         row.Append(new IconElement(StatIcon(iconKey))
         {
@@ -303,7 +303,7 @@ public class CharacterSheetUI : UIState
 
     private static UIElement SectionRow(string title, float h = 22f)
     {
-        var row = new UIElement { Width = new StyleDimension(544f, 0f), Height = new StyleDimension(h, 0f) };
+        var row = new UIElement { Width = new StyleDimension(432f, 0f), Height = new StyleDimension(h, 0f) };
         row.Append(new UIText(title, 0.78f)
         {
             Top = new StyleDimension(0f, 0f), Left = new StyleDimension(2f, 0f), TextColor = C_Accent
