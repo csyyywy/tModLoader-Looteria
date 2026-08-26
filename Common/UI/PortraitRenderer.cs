@@ -24,8 +24,9 @@ public static class PortraitRenderer
 
     /// <summary>
     /// 用「慢路径」（spriteBatch 直绘）画玩家。
-    /// <paramref name="uiPos"/> = 玩家碰撞盒左上角的 UI 坐标（已按 UIScale 的 UI 像素）。
-    /// 建议调用方自己包好 <c>spriteBatch.Begin/End</c>（Immediate 或 Deferred + UIScaleMatrix 均可）。
+    /// <paramref name="uiPos"/> = 玩家碰撞盒左上角的 UI 坐标（UI 像素，UIScale 坐标空间）。
+    /// 注意：调用方需保证当前 spriteBatch 已 Begin（矩阵 = UIScaleMatrix）。
+    /// 内部坐标 = uiPos（世界 − screenPosition），直接喂给各层（层内不再减 screenPosition）。
     /// </summary>
     public static void DrawPlayer(SpriteBatch sb, Player player, Vector2 uiPos, float scale = 1f)
     {
@@ -38,7 +39,7 @@ public static class PortraitRenderer
 
         var drawInfo = new PlayerDrawSet();
         drawInfo.BoringSetup(player, _drawData, _dust, _gore,
-            uiPos + Main.screenPosition, // 世界坐标（层内 DrawData 再减回 screenPosition）
+            uiPos + Main.screenPosition, // 世界坐标（层内 DrawData 再减回 screenPosition → uiPos）
             0f, 0f, Vector2.Zero);
 
         PlayerLoader.ModifyDrawInfo(ref drawInfo);

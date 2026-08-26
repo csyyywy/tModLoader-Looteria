@@ -137,7 +137,7 @@ public class CharacterSheetUI : UIState
 
         // ===== 中上：人物立绘（UseImmediateMode 必须 true：1.4.4 UI 里 DrawPlayer 在
         // Deferred 批次下会被界面队列盖住——见 tCF "Characters being drawn behind interface"）=====
-        _portraitPanel = MakePanel(PORTRAIT_X, PORTRAIT_W, height: new StyleDimension(PORTRAIT_H, 0f));
+        _portraitPanel = MakePanel(PORTRAIT_X, PORTRAIT_W, height: new StyleDimension(0f, PORTRAIT_H));
         _root.Append(_portraitPanel);
 
         _portrait = new PortraitElement
@@ -466,7 +466,21 @@ public class CharacterSheetUI : UIState
                 clone.UpdateDyes();
                 clone.PlayerFrame();
 
+                // 手动控制批次：结束外层 UI Deferred → 以 UIScaleMatrix 开 Immediate 批次绘制 →
+                // 结束 → 恢复 Deferred。避免 RenderAllLayersSlow 里 SetShaderForData/Apply
+                // 把坐标/着色器状态搞乱，也避免 spriteBuffer 相关的原始绘制问题。
+                var uiMatrix = Main.UIScaleMatrix;
+                sb.End();
+                sb.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend,
+                    SamplerState.PointClamp, DepthStencilState.None,
+                    RasterizerState.CullNone, null, uiMatrix);
+
                 PortraitRenderer.DrawPlayer(sb, clone, uiPos, s);
+
+                sb.End();
+                sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend,
+                    SamplerState.AnisotropicClamp, DepthStencilState.None,
+                    RasterizerState.CullNone, null, uiMatrix);
             }
             catch (Exception e)
             {
