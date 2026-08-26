@@ -432,15 +432,7 @@ public class EnemyAffixGlobalNPC : GlobalNPC
 
     // ===== 名字前缀 / 染色（客户端也执行，纯表现）=====
 
-    public override bool? DrawHealthBar(NPC npc, byte hbPosition, ref float scale, ref Vector2 position)
-    {
-        // 血条标签模式：返回 false 跳过原版血条，词缀标签改由 PostDraw 自绘（避免与血条装饰重叠）。
-        if (HasAffixes && EnemyAffixConfig.Instance is { AffixDisplayMode: AffixDisplayMode.UnderHealthBar })
-            return false;
-        return base.DrawHealthBar(npc, hbPosition, ref scale, ref position);
-    }
-
-    /// <summary>血条标签模式：在敌人头顶上方绘制彩色词缀标签（每条一行，按词缀上色）。</summary>
+    /// <summary>血条标签模式：在敌人血条下方绘制彩色词缀标签（每条一行，按词缀上色）。</summary>
     public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
     {
         if (!HasAffixes || Affixes.Count == 0) return;
@@ -451,14 +443,21 @@ public class EnemyAffixGlobalNPC : GlobalNPC
         if (npc.boss || EnemyAffixDatabase.RarityOf(Affixes[0]) == EnemyAffixRarity.BossExclusive)
             scale = 1.5f; // Boss 血条放大，标签同步放大
 
-        // 标签顶 = 名字底部 + 12px；若名字未显示则退回血条顶部 + 6px
-        float nameBottom = npc.Top.Y - 30f + npc.gfxOffY;
-        float barTop = npc.Top.Y + 6f;
-        if (npc.nameOver <= 0f)
-            nameBottom = barTop;
-        float y = Math.Min(nameBottom, barTop) - Main.screenPosition.Y;
+        // 标签 Y（世界坐标，随当前 Main.Transform 矩阵变换）：
+        // 血条下方（血条默认画在脚下；设置 2 = 头顶血条）；无血条设置时退回头顶名字位置
+        float y;
+        if (Main.HealthBarDrawSettings == 0)
+        {
+            y = npc.Top.Y - 30f + npc.gfxOffY;
+        }
+        else
+        {
+            float barTop = Main.HealthBarDrawSettings == 1
+                ? npc.position.Y + npc.height + 10f + Main.NPCAddHeight(npc) + npc.gfxOffY
+                : npc.position.Y + 10f - Main.NPCAddHeight(npc) / 2f + npc.gfxOffY;
+            y = barTop + 36f * scale + 4f;
+        }
 
-        float alpha = Math.Max(0.2f, Math.Min(1f, (float)Lighting.Brightness((int)(npc.Center.X / 16f), (int)(npc.Center.Y / 16f)) * 1.15f + 0.25f));
         var font = FontAssets.MouseText.Value;
         string line = "";
         float lineW = 0f;
@@ -469,7 +468,7 @@ public class EnemyAffixGlobalNPC : GlobalNPC
             Vector2 size = font.MeasureString(txt) * scale;
             if (line.Length > 0 && lineW + size.X > 250f * scale)
             {
-                DrawLabelLine(spriteBatch, font, line, npc.Center.X, ref y, scale, alpha);
+                DrawLabelLine(spriteBatch, font, line, npc.Center.X, ref y, scale);
                 line = "";
                 lineW = 0f;
             }
@@ -477,16 +476,15 @@ public class EnemyAffixGlobalNPC : GlobalNPC
             lineW += size.X + (lineW > 0f ? 12f * scale : 0f);
         }
         if (line.Length > 0)
-            DrawLabelLine(spriteBatch, font, line, npc.Center.X, ref y, scale, alpha);
+            DrawLabelLine(spriteBatch, font, line, npc.Center.X, ref y, scale);
     }
 
-    /// <summary>绘制一行血条标签（居中于敌人）。</summary>
-    private static void DrawLabelLine(SpriteBatch sb, ReLogic.Graphics.DynamicSpriteFont font, string line, float npcCenterX, ref float y, float scale, float alpha)
+    /// <summary>绘制一行血条标签（居中于敌人；世界坐标）。</summary>
+    private static void DrawLabelLine(SpriteBatch sb, ReLogic.Graphics.DynamicSpriteFont font, string line, float npcCenterX, ref float y, float scale)
     {
         Vector2 size = font.MeasureString(line) * scale;
-        float x = Main.screenPosition.X + Main.screenWidth / 2f + (npcCenterX - Main.screenPosition.X - Main.screenWidth / 2f) * Main.GameViewMatrix.Zoom.X - size.X / 2f;
-        float shadowAlpha = 0.5f * alpha;
-        Utils.DrawBorderStringFourWay(sb, font, line, x, y, Color.White * alpha, Color.Black * shadowAlpha, Vector2.Zero, scale);
+        float x = npcCenterX - size.X / 2f;
+        Utils.DrawBorderStringFourWay(sb, font, line, x, y, Color.White, Color.Black * 0.8f, Vector2.Zero, scale);
         y += size.Y + 2f;
     }
 

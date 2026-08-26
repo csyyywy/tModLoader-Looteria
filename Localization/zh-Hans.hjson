@@ -412,6 +412,20 @@ Mods: {
 					Tooltip: 永不附加词缀的物品显示名列表。
 				}
 			}
+
+			AffixDisplayMode: {
+				// Tooltip: ""
+
+				InName: {
+					// Label: In Name
+					// Tooltip: ""
+				}
+
+				UnderHealthBar: {
+					// Label: Under Health Bar
+					// Tooltip: ""
+				}
+			}
 		}
 
 		Messages: {
