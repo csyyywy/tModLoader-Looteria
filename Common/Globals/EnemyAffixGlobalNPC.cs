@@ -444,8 +444,9 @@ public class EnemyAffixGlobalNPC : GlobalNPC
                     labelScale = 1.5f;
 
                 // 血条绘制跑在 UIScaleMatrix 批次；position 是世界坐标 → 手动减 screenPosition 转屏幕坐标
+                // 位置：血条下方；普通怪距血条 16px，Boss 距血条 22px（labelScale 1.5）
                 float barTop = position.Y;
-                float y = barTop - Main.screenPosition.Y + 36f * labelScale - 12f; // 血条下方 20px 处
+                float y = barTop - Main.screenPosition.Y + 36f * labelScale - 12f - (labelScale > 1f ? 20f : 8f);
 
                 var font = FontAssets.MouseText.Value;
                 var line = new List<(string txt, Color color)>();
