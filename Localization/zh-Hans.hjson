@@ -69,9 +69,14 @@ Mods: {
 					Tooltip: 词缀数值是否随游戏阶段（0~7）上浮（×(1+0.15×阶段)）。
 				}
 
+				AffixDisplayMode: {
+					Label: 词缀显示方式
+					Tooltip: 词缀如何展示：血条下方 = 在敌人血条下方渲染彩色词缀标签（默认）；名字前缀 = 在敌人名字前加词缀（如「狂暴的骷髅」）。
+				}
+
 				ShowAffixInName: {
 					Label: 名字显示词缀前缀
-					Tooltip: 在敌人名字前加词缀前缀（如「狂暴的骷髅」）。关闭则只染色。
+					Tooltip: 词缀显示方式为「名字前缀」时，是否在敌人名字前加词缀前缀（如「狂暴的骷髅」）。关闭则只染色。
 				}
 
 				EliteDropBonusPerAffix: {

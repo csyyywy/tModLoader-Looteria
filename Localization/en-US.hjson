@@ -69,9 +69,14 @@ Mods: {
 					Tooltip: Whether affix values scale with game stage (0-7) as ×(1+0.15×stage).
 				}
 
+				AffixDisplayMode: {
+					Label: Affix Display Mode
+					Tooltip: How affixes are shown: Under Health Bar = colored affix labels under the enemy health bar (default); In Name = prepend affix to the enemy name (e.g. "Berserk Zombie").
+				}
+
 				ShowAffixInName: {
 					Label: Show Affix Prefix In Name
-					Tooltip: Prepend the affix name to the enemy name (e.g. "Berserk Zombie"). Off = color tint only.
+					Tooltip: With display mode "In Name", whether to prepend the affix to the enemy name (e.g. "Berserk Zombie"). Off = color tint only.
 				}
 
 				EliteDropBonusPerAffix: {

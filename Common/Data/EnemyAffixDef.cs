@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using global::Looteria.Common.Configs;
@@ -61,6 +62,20 @@ public enum EnemyAffixId : byte
 /// </summary>
 public static class EnemyAffixDatabase
 {
+    /// <summary>词缀血条标签色（Off = 不显示；Boss 专属亮金、精英紫、普通蓝）。</summary>
+    public static Color LabelColor(EnemyAffixId id) => id switch
+    {
+        EnemyAffixId.Apocalypse or EnemyAffixId.Immortal or EnemyAffixId.Annihilation
+            or EnemyAffixId.ElementLord or EnemyAffixId.Warlord or EnemyAffixId.SplitRampage
+            or EnemyAffixId.ThornsCrown or EnemyAffixId.VampireLord or EnemyAffixId.StormEye
+            or EnemyAffixId.Fury or EnemyAffixId.SwiftHunter or EnemyAffixId.Unbreakable
+            => new Color(255, 205, 60),
+        EnemyAffixId.Thorns or EnemyAffixId.Vampiric or EnemyAffixId.Split or EnemyAffixId.Summoner
+            or EnemyAffixId.Explosive
+            => new Color(180, 95, 235),
+        _ => new Color(110, 195, 255),
+    };
+
     /// <summary>词缀显示名本地化键后缀（Mods.Looteria.EnemyAffix.&lt;Key&gt;）。</summary>
     public static string Key(EnemyAffixId id) => id switch
     {

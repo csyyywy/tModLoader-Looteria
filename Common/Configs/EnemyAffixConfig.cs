@@ -6,6 +6,16 @@ using Terraria.ModLoader.Config;
 
 namespace Looteria.Common.Configs;
 
+/// <summary>敌人词缀显示模式：InName = 名字前缀（原模式）；UnderHealthBar = 血条下方彩色词缀标签（默认）。</summary>
+public enum AffixDisplayMode
+{
+    /// <summary>词缀渲染进敌人名字前缀（如「狂暴的骷髅」），并按稀有度染色。</summary>
+    InName,
+
+    /// <summary>名字不带词缀；词缀以彩色标签渲染在敌人血条下方（每条一行）。</summary>
+    UnderHealthBar,
+}
+
 /// <summary>
 /// 敌人词缀配置（独立配置文件，专门管理敌人系统）。
 /// ⚠️ 值类型（bool/int/float）**必须**加 [DefaultValue]（铁律，见 LooteriaConfig 头注释）。
@@ -91,7 +101,11 @@ public class EnemyAffixConfig : ModConfig
     [DefaultValue(true)]
     public bool StageScaling = true;
 
-    /// <summary>词缀是否显示在敌人名字前缀（如「狂暴的骷髅」）。</summary>
+    /// <summary>词缀显示模式：InName = 名字前缀（如「狂暴的骷髅」）；UnderHealthBar = 血条下方彩色词缀标签。</summary>
+    [DefaultValue(AffixDisplayMode.UnderHealthBar)]
+    public AffixDisplayMode AffixDisplayMode = AffixDisplayMode.UnderHealthBar;
+
+    /// <summary>词缀是否显示在敌人名字前缀（如「狂暴的骷髅」）。旧配置项，仅 AffixDisplayMode=InName 时生效。</summary>
     [DefaultValue(true)]
     public bool ShowAffixInName = true;
 
