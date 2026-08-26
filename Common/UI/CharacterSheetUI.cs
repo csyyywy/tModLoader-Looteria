@@ -46,7 +46,7 @@ public class CharacterSheetUI : UIState
     private const float EQUIP_X = 24f, EQUIP_W = 92f;
     private const float PORTRAIT_X = 136f, PORTRAIT_W = 300f;
     private const float PORTRAIT_H = 0.54f;    // 肖像面板高 = root 高的 54%（余下给坐骑/宠物）
-    private const float MOUNT_H = 128f;
+    private const float MOUNT_H = 184f;
     private const float ACC_X = 448f, ACC_W = 92f;
     private const float STATS_X = 552f, STATS_W = 528f; // 右缘贴 root 右缘（552+528=1080）
 
@@ -118,21 +118,8 @@ public class CharacterSheetUI : UIState
             AddSlot(_equip, 0, T("SlotHead"), ref top, locked: false);
             AddSlot(_equip, 1, T("SlotChest"), ref top, locked: false);
             AddSlot(_equip, 2, T("SlotLegs"), ref top, locked: false);
-            // 武器固定锚在面板底部
-            var wlbl = new UIText(T("SlotHeld"), 0.6f)
-            {
-                Top = new StyleDimension(-82f, 1f),
-                Left = new StyleDimension(8f, 0f),
-                TextColor = C_Dim
-            };
-            _equip.Append(wlbl);
-            var held = new UIItemSlot(-1, player.HeldItem)
-            {
-                Top = new StyleDimension(-64f, 1f),
-                Left = new StyleDimension(14f, 0f)
-            };
-            held.OnHover = ShowHoverItemTooltip;
-            _equip.Append(held);
+            // 武器槽：紧接装备槽下方（不锚底部）
+            AddSlot(_equip, -1, T("SlotHeld"), ref top, locked: false);
         }
 
         // ===== 中上：人物立绘（UseImmediateMode 必须 true：1.4.4 UI 里 DrawPlayer 在
@@ -223,7 +210,7 @@ public class CharacterSheetUI : UIState
         BorderColor = new Color(50, 54, 70)
     };
 
-    /// <summary>单个槽：标签（可空）在上，物品格在下；锁定槽=变暗+对角叉。纵向排。</summary>
+    /// <summary>单个槽：标签（可空）在上，物品格在下；锁定槽=变暗+对角叉。纵向排。slot=-1 表示手持武器。</summary>
     private static void AddSlot(UIPanel panel, int slot, string? label, ref int top, bool locked)
     {
         var player = Main.LocalPlayer;
@@ -448,7 +435,9 @@ public class CharacterSheetUI : UIState
             var player = Main.LocalPlayer;
             if (player == null) return;
 
-            var clone = player.clientClone();
+            // 完整序列化克隆：clientClone 只拷网络状态，不含 headSlot/bodySlot/legSlot 等
+            // 派生字段（SetDefaults 才算）→ 会导致只画皮肤不画装备。SerializedClone 全量拷贝。
+            var clone = player.SerializedClone();
             clone.dead = false;
             clone.isDisplayDollOrInanimate = true; // 全亮肤色 + 无视隐身穿插
 
