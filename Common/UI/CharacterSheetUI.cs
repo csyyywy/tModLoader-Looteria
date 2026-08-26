@@ -48,7 +48,7 @@ public class CharacterSheetUI : UIState
     private const float PORTRAIT_H = 0.54f;    // 肖像面板高 = root 高的 54%（余下给坐骑/宠物）
     private const float MOUNT_H = 184f;
     private const float ACC_X = 448f, ACC_W = 92f;
-    private const float STATS_X = 552f, STATS_W = 528f; // 右缘贴 root 右缘（552+528=1080）
+    private const float STATS_X = 496f, STATS_W = 528f; // 右缘贴 root 右缘（496+528=1024，左移 56 = 一个物品框）
 
     private UIPanel _root = null!;
     private UIPanel _equip = null!;
@@ -260,10 +260,10 @@ public class CharacterSheetUI : UIState
     private static UIElement StatRow(string iconKey, string text, Color color, string tooltip = "", float h = 22f)
     {
         var row = new UIElement { Width = new StyleDimension(488f, 0f), Height = new StyleDimension(h, 0f) };
-        // 图标：自定义绘制，等比缩放进 18x18 盒，与文字行顶对齐
+        // 图标：自定义绘制，等比缩放进 18x18 盒；Top=-6 = 相对原来上移 8px
         row.Append(new IconElement(StatIcon(iconKey))
         {
-            Top = new StyleDimension(2f, 0f),
+            Top = new StyleDimension(-6f, 0f),
             Left = new StyleDimension(2f, 0f),
             Width = new StyleDimension(18f, 0f),
             Height = new StyleDimension(18f, 0f)
