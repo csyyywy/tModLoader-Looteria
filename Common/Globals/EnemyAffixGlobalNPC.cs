@@ -432,6 +432,57 @@ public class EnemyAffixGlobalNPC : GlobalNPC
 
     // ===== 名字前缀 / 染色（客户端也执行，纯表现）=====
 
+    /// <summary>
+    /// 血条绘制钩子：在敌人血条下方渲染词缀标签（每条一行，按词缀上色）。
+    /// 返回 null 保留原版血条；标签随血条显示（血条出现才画，血条隐藏不画）。
+    /// </summary>
+    public override bool? DrawHealthBar(NPC npc, byte hbPosition, ref float scale, ref Vector2 position)
+    {
+        if (HasAffixes && Affixes.Count > 0 && npc.life > 0)
+        {
+            if (EnemyAffixConfig.Instance is { AffixDisplayMode: AffixDisplayMode.UnderHealthBar })
+            {
+                // 用血条绘制参数定位：position 是世界坐标（血条中心 X / 顶部 Y）
+                float labelScale = scale;
+                if (npc.boss || EnemyAffixDatabase.RarityOf(Affixes[0]) == EnemyAffixRarity.BossExclusive)
+                    labelScale = 1.5f;
+
+                float barTop = position.Y;
+                float y = barTop + 36f * labelScale + 4f;
+
+                var font = FontAssets.MouseText.Value;
+                string line = "";
+                float lineW = 0f;
+                foreach (var id in Affixes)
+                {
+                    string txt = Language.GetTextValue("Mods.Looteria.EnemyAffix." + EnemyAffixDatabase.Key(id));
+                    if (string.IsNullOrEmpty(txt)) continue;
+                    Vector2 size = font.MeasureString(txt) * labelScale;
+                    if (line.Length > 0 && lineW + size.X > 250f * labelScale)
+                    {
+                        DrawLabelLine(font, line, position.X, ref y, labelScale);
+                        line = "";
+                        lineW = 0f;
+                    }
+                    line += (line.Length > 0 ? "  " : "") + txt;
+                    lineW += size.X + (lineW > 0f ? 12f * labelScale : 0f);
+                }
+                if (line.Length > 0)
+                    DrawLabelLine(font, line, position.X, ref y, labelScale);
+            }
+        }
+        return null; // 保留原版血条
+    }
+
+    /// <summary>绘制一行词缀标签（世界坐标；血条绘制时的 Main.Transform 矩阵自动变换）。</summary>
+    private static void DrawLabelLine(ReLogic.Graphics.DynamicSpriteFont font, string line, float barCenterX, ref float y, float scale)
+    {
+        Vector2 size = font.MeasureString(line) * scale;
+        float x = barCenterX - size.X / 2f;
+        Utils.DrawBorderStringFourWay(Main.spriteBatch, font, line, x, y, Color.White, Color.Black * 0.8f, Vector2.Zero, scale);
+        y += size.Y + 2f;
+    }
+
     public override void ModifyTypeName(NPC npc, ref string typeName)
     {
         if (!HasAffixes) return;
