@@ -425,21 +425,17 @@ public class CharacterSheetUI : UIState
     }
 
     /// <summary>
-    /// 角色肖像：真实玩家渲染。
-    /// · UseImmediateMode = true（必需）：1.4.4 的 DrawPlayer 内部经 Main.spriteBuffer 原始绘制，
-    ///   在 Deferred 批次下绘制顺序错乱（被界面背景盖住）——原版 UICharacter 也设了 ImmediateMode。
-    /// · DrawPlayer 的 position = 碰撞盒【左上角】的【世界坐标】（UI 坐标 + screenPosition，层内再减回）。
-    /// · 缩放锚点 = 碰撞盒底部中心（feet），因此把碰撞盒底部放到盒子底边，放大时向上长。
+    /// 角色肖像。
+    /// · 用 <see cref="PortraitRenderer"/>（自研慢路径：BoringSetup → 各层 → RenderAllLayersSlow）
+    ///   完全绕开 Main.PlayerRenderer 的 spriteBuffer 原始绘制问题。
     /// · 视觉克隆（clientClone）：不动真玩家的装备/增益；isDisplayDollOrInanimate 全亮。
-    /// · Main.CurrentPlayerOverride：tML 的渲染管线（染料/槽位等）读 Main.CurrentPlayer，
-    ///   必须把克隆临时设为 CurrentPlayer——原版 UICharacter 的 tML 补丁正是这么做的。
-    /// · OverrideSamplerState = PointClamp：与 UICharacter 一致。
+    /// · 缩放锚点 = 碰撞盒底部中心（feet），把碰撞盒底部放到盒子底边，放大时向上长。
     /// </summary>
     private class PortraitElement : UIElement
     {
         public PortraitElement()
         {
-            UseImmediateMode = true;
+            // 不再需要 UseImmediateMode：慢路径用普通 spriteBatch 绘制，走 UI 矩阵。
             OverrideSamplerState = SamplerState.PointClamp;
         }
 
@@ -452,13 +448,12 @@ public class CharacterSheetUI : UIState
             var player = Main.LocalPlayer;
             if (player == null) return;
 
-            // 视觉克隆：不动真玩家的装备/增益状态（clientClone 内部缓存复用 Player 实例）
             var clone = player.clientClone();
             clone.dead = false;
             clone.isDisplayDollOrInanimate = true; // 全亮肤色 + 无视隐身穿插
 
             float s = MathF.Max(2f, (d.Height - 24f) / 56f); // scale1 时人物约 20x56（含头）
-            var pos = new Vector2(
+            var uiPos = new Vector2(
                 d.X + d.Width * 0.5f - clone.width * 0.5f,
                 d.Y + d.Height - 10f - clone.height);
 
@@ -471,9 +466,7 @@ public class CharacterSheetUI : UIState
                 clone.UpdateDyes();
                 clone.PlayerFrame();
 
-                // 位置 = 世界坐标（UI 坐标 + screenPosition；层内 DrawData 再减回 screenPosition）
-                // 注意：UseImmediateMode 已在外层做好 Begin(Immediate)/End 包裹，这里不要再手动 Begin。
-                Main.PlayerRenderer.DrawPlayer(Main.Camera, clone, pos + Main.screenPosition, 0f, Vector2.Zero, 0f, s);
+                PortraitRenderer.DrawPlayer(sb, clone, uiPos, s);
             }
             catch (Exception e)
             {
